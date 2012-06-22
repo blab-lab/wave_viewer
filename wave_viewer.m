@@ -56,7 +56,8 @@ function viewer_end_state = wave_viewer(y,varargin)
   formant_colors = {'b','r','g','k','c','m'}; % colors for more formants than you'll ever use
   formant_marker_width = 4;
 
-  nlpc_choices = 7:15;
+  nlpc_choices = 7:20;
+  preemph_range = [-0.99 0.99];
   all_ms_framespecs = get_all_ms_framespecs();
 
   params.sigproc_params = struct('fs', 11025, ...
@@ -72,6 +73,8 @@ function viewer_end_state = wave_viewer(y,varargin)
                                  'name', 'signal', ...
                                  'axfracts', [], ...
                                  'yes_gray', 1, ...
+                                 'thresh_gray', 0, ...
+                                 'max_gray', 1, ...
                                  'figpos',[850         726        1170         757]);
   params.event_params   = struct('event_names', [], ...
                                  'event_times', [], ...
@@ -244,7 +247,7 @@ function viewer_end_state = wave_viewer(y,varargin)
     end
   end
   
-  h_slider_preemph = uicontrol('Style','slider', 'Min',0, 'Max',0.99, 'SliderStep', [0.01 0.1], 'Value',sigproc_params.preemph, ...
+  h_slider_preemph = uicontrol('Style','slider', 'Min',preemph_range(1), 'Max',preemph_range(2), 'SliderStep', [0.01 0.1], 'Value',sigproc_params.preemph, ...
                              'Position',[padL horiz_orig colwidth 20], 'HandleVisibility','off', 'Callback',@set_preemph); horiz_orig = horiz_orig + 20 + padUinter;
   h_edit_preemph = uicontrol('Style','edit', 'String',sigproc_params.preemph, ...
                              'Position',[padL horiz_orig colwidth 20], 'HandleVisibility','off'); horiz_orig = horiz_orig + 20 + padUinter;
@@ -261,6 +264,23 @@ function viewer_end_state = wave_viewer(y,varargin)
     framespec_choice_str{i_framespec} = sprintf('%.0f/%.1fms, %s',all_ms_framespecs.ms_frame(i_framespec),all_ms_framespecs.ms_frame_advance(i_framespec),all_ms_framespecs.name{i_framespec});
   end
 
+  h_slider_thresh_gray = uicontrol('Style','slider', 'Min',0, 'Max',1, 'SliderStep', [0.01 0.1], 'Value',plot_params.thresh_gray, ...
+                               'Position',[padL horiz_orig colwidth 20], 'HandleVisibility','off', 'Callback',@set_thresh_gray); horiz_orig = horiz_orig + 20 + padUinter;
+  function set_thresh_gray(hObject,eventdata) % callback for h_slider_thresh_gray
+    plot_params.thresh_gray = get(hObject, 'Value');
+    if plot_params.yes_gray, my_colormap('my_gray',1,plot_params.thresh_gray,plot_params.max_gray); end
+  end
+
+  h_slider_max_gray = uicontrol('Style','slider', 'Min',0, 'Max',1, 'SliderStep', [0.01 0.1], 'Value',plot_params.max_gray, ...
+                               'Position',[padL horiz_orig colwidth 20], 'HandleVisibility','off', 'Callback',@set_max_gray); horiz_orig = horiz_orig + 20 + padUinter;
+  h_text_max_gray = uicontrol('Style','text', 'String','gram color', 'FontWeight','bold', ...
+                             'Position',[padL horiz_orig colwidth 15], 'HandleVisibility','off', 'BackgroundColor',bgcolor); horiz_orig = horiz_orig + 15 + padU;
+  function set_max_gray(hObject,eventdata) % callback for h_slider_max_gray
+    plot_params.max_gray = get(hObject, 'Value');
+    if plot_params.yes_gray, my_colormap('my_gray',1,plot_params.thresh_gray,plot_params.max_gray); end
+  end
+  
+  
   if ~ischar(sigproc_params.ms_framespec_gram), error('sorry: we only support named ms_framespecs right now'); end
   initial_pulldown_value = strmatch(sigproc_params.ms_framespec_gram,all_ms_framespecs.name); if isempty(initial_pulldown_value), initial_pulldown_value = 1; end
   h_pulldown_ms_framespec_gram = uicontrol('Style','popupmenu', 'String',framespec_choice_str, 'Value',initial_pulldown_value, ...
@@ -497,7 +517,7 @@ function wave_ax = new_wave_ax(y,sigproc_params,plot_params,event_params)
   params{1}.stop_player_t = 0;
   params{1}.current_player_t = 0;
   params{1}.inc_player_t = 0.01;
-  h_player = audioplayer(y,fs);
+  h_player = audioplayer(0.5*y/max(abs(y)),fs); % the scaling of y is a bit of a hack to make audioplayer play like soundsc
   params{1}.h_player = h_player;
   params{1}.isamps2play_total = get(h_player,'TotalSamples');
   set(h_player,'StartFcn',@player_start);
@@ -512,7 +532,6 @@ function wave_ax = new_wave_ax(y,sigproc_params,plot_params,event_params)
 end
 
 function update_wave_ax_tlims_from_gram_ax(wave_ax,gram_ax)
-  global yax_fact
   wave_axinfo = get(wave_ax,'UserData');
   gram_axinfo = get(gram_ax,'UserData');
   t_min = gram_axinfo.t_llim;
@@ -520,8 +539,7 @@ function update_wave_ax_tlims_from_gram_ax(wave_ax,gram_ax)
   t_range = t_max - t_min;
   the_axdat = wave_axinfo.dat{1};
   hax = wave_axinfo.h;
-  y_low = min(the_axdat); y_hi  = max(the_axdat); y_range = y_hi - y_low;
-  axis(hax,[t_min t_max (y_low-yax_fact*y_range) (y_hi +yax_fact*y_range)]);
+  set_viewer_axlims(hax,t_min,t_max,the_axdat);
   wave_axinfo.t_llim = t_min;
   wave_axinfo.t_hlim = t_max;
   set(wave_ax,'UserData',wave_axinfo);
@@ -547,6 +565,8 @@ end
 
 function update_ampl_ax(ampl_ax,wave_ax,sigproc_params)
   wave_axinfo = get(wave_ax,'UserData');
+  t_min = wave_axinfo.t_llim;
+  t_max = wave_axinfo.t_hlim;
   fs = wave_axinfo.params{1}.fs;
   y = wave_axinfo.dat{1};
   ampl_thresh4voicing = sigproc_params.ampl_thresh4voicing;
@@ -562,6 +582,7 @@ function update_ampl_ax(ampl_ax,wave_ax,sigproc_params)
   ampl_axinfo.taxis = params{1}.taxis;
   set(ampl_axinfo.hply(1),'XData',params{1}.taxis);
   set(ampl_axinfo.hply(1),'YData',axdat{1});
+  set_viewer_axlims(ampl_ax,t_min,t_max,axdat{1});
   ampl_axinfo.hl_ampl_thresh4voicing = set_ampl_thresh4voicing_line(ampl_thresh4voicing,ampl_axinfo,old_hl_ampl_thresh4voicing);
   set(ampl_ax,'UserData',ampl_axinfo);
   update_tmarker(ampl_axinfo.h_tmarker_low,[]);
@@ -628,6 +649,8 @@ end
 function  update_pitch_ax(pitch_ax,wave_ax,ampl_ax,sigproc_params)
   wave_axinfo = get(wave_ax,'UserData');
   ampl_axinfo = get(ampl_ax,'UserData');
+  t_min = wave_axinfo.t_llim;
+  t_max = wave_axinfo.t_hlim;
   fs = wave_axinfo.params{1}.fs;
   y = wave_axinfo.dat{1};
 
@@ -646,6 +669,7 @@ function  update_pitch_ax(pitch_ax,wave_ax,ampl_ax,sigproc_params)
   pitch_axinfo.taxis = params{1}.taxis;
   set(pitch_axinfo.hply(1),'XData',params{1}.taxis);
   set(pitch_axinfo.hply(1),'YData',axdat{1});
+  set_viewer_axlims(pitch_ax,t_min,t_max,axdat{1});
   set(pitch_ax,'UserData',pitch_axinfo);
   update_tmarker(pitch_axinfo.h_tmarker_low,[]);
   update_tmarker(pitch_axinfo.h_tmarker_spec,[]);
@@ -672,6 +696,8 @@ function gram_ax = new_gram_ax(wave_ax,ampl_ax,sigproc_params,plot_params)
   y = wave_axinfo.dat{1};
   
   yes_gray = plot_params.yes_gray;
+  thresh_gray = plot_params.thresh_gray;
+  max_gray = plot_params.max_gray;
   hzbounds4plot = plot_params.hzbounds4plot;
   ms_framespec_gram = sigproc_params.ms_framespec_gram;
   ms_framespec_form = sigproc_params.ms_framespec_form;
@@ -681,7 +707,7 @@ function gram_ax = new_gram_ax(wave_ax,ampl_ax,sigproc_params,plot_params)
   preemph = sigproc_params.preemph;
   ampl_thresh4voicing = sigproc_params.ampl_thresh4voicing;
 
-  if yes_gray, my_colormap('my_gray',1); end
+  if yes_gray, my_colormap('my_gray',1,thresh_gray,max_gray); end
 
   [axdat{1},params{1}] = make_spectrogram_axdat(y,fs,ms_framespec_gram,nfft,preemph);
   thresh4voicing_spec.ampl = ampl_axinfo.dat{1};
@@ -695,12 +721,14 @@ function gram_ax = new_gram_ax(wave_ax,ampl_ax,sigproc_params,plot_params)
 end
 
 function update_gram_ax(gram_ax,wave_ax,ampl_ax,sigproc_params,plot_params)
+
+  global wave_viewer_logshim
+
   wave_axinfo = get(wave_ax,'UserData');
   ampl_axinfo = get(ampl_ax,'UserData');
   fs = wave_axinfo.params{1}.fs;
   y = wave_axinfo.dat{1};
 
-  yes_gray = plot_params.yes_gray;
   hzbounds4plot = plot_params.hzbounds4plot;
   ms_framespec_gram = sigproc_params.ms_framespec_gram;
   ms_framespec_form = sigproc_params.ms_framespec_form;
@@ -710,8 +738,6 @@ function update_gram_ax(gram_ax,wave_ax,ampl_ax,sigproc_params,plot_params)
   preemph = sigproc_params.preemph;
   ampl_thresh4voicing = sigproc_params.ampl_thresh4voicing;
 
-  if yes_gray, my_colormap('my_gray',1); end
-  
   [axdat{1},params{1}] = make_spectrogram_axdat(y,fs,ms_framespec_gram,nfft,preemph);
   thresh4voicing_spec.ampl = ampl_axinfo.dat{1};
   thresh4voicing_spec.ampl_taxis = ampl_axinfo.params{1}.taxis;
@@ -727,7 +753,9 @@ function update_gram_ax(gram_ax,wave_ax,ampl_ax,sigproc_params,plot_params)
   gram_axinfo.params = params;
   gram_axinfo.taxis = taxis;
   gram_axinfo.faxis = faxis;
-  set(gram_axinfo.hply(1),'CData',axdat{1});
+  absS = axdat{1};
+  absS2plot = 20*log10(absS+wave_viewer_logshim);
+  set(gram_axinfo.hply(1),'CData',absS2plot);
   set(gram_axinfo.hply(1),'XData',taxis);
   set(gram_axinfo.hply(1),'YData',faxis);
   ftrack = axdat{2};
@@ -803,7 +831,7 @@ function spec_ax = new_spec_ax(gram_ax)
 end
 
 function update_spec_ax(spec_ax,gram_ax)
-  global yax_fact tmarker_init_border
+  global tmarker_init_border
   global axborder_xl axborder_xr axborder_yl axborder_yu
   global figborder_xl figborder_xr figborder_yl figborder_yu
   global ax_heighten_inc
@@ -863,7 +891,6 @@ function [the_axdat,the_params] = make_form_spec_axdat(ftrack,lpc_coeffs,frame_t
 end
 
 function update_spec_plots(hax,hply,axdat,params)
-  global yax_fact
   global formant_colors formant_marker_width
   
   min_axdat1 = min(axdat{1}); max_axdat1 = max(axdat{1});
@@ -877,10 +904,7 @@ function update_spec_plots(hax,hply,axdat,params)
   haxlims = axis(hax);
   t_min = haxlims(1); t_max = haxlims(2); t_range = t_max - t_min;
   dat4minmax = [norm_axdat{1} norm_axdat{2}];
-  y_low = min(dat4minmax); y_hi  = max(dat4minmax);
-  y_range = y_hi - y_low; if y_range == 0, y_range = 1; end
-  axis(hax,[t_min t_max (y_low-yax_fact*y_range) (y_hi +yax_fact*y_range)]);
-
+  set_viewer_axlims(hax,t_min,t_max,dat4minmax);
   haxlims = axis(hax);
   set(hply(1),'YData',norm_axdat{1}); set(hply(1),'Color','b');
   set(hply(2),'YData',norm_axdat{2}); set(hply(2),'Color','r');
@@ -903,7 +927,7 @@ end
 
 function axinfo = new_axinfo(axtype,taxis,faxis,axdat,hax,hzbounds4plot,name,t_min,t_max,params,event_params)
 
-  global yax_fact tmarker_init_border
+  global tmarker_init_border
   global wave_viewer_logshim
   global formant_colors
 
@@ -924,8 +948,7 @@ function axinfo = new_axinfo(axtype,taxis,faxis,axdat,hax,hzbounds4plot,name,t_m
       titlstr = sprintf('waveform(%s): %.1f sec, %d samples',name,t_range,axinfo.datlims(2));
       hxlab = xlabel('Time (sec)');
       hylab = ylabel('ampl');
-      y_low = min(axdat{1}); y_hi  = max(axdat{1}); y_range = y_hi - y_low;
-      axis(hax,[t_min t_max (y_low-yax_fact*y_range) (y_hi +yax_fact*y_range)]);
+      set_viewer_axlims(hax,t_min,t_max,axdat{1});
       yes_tmarker_play = 1;
       yes_add_user_events = 1;
       spec_marker_name.name = ' %.3f s ';
@@ -945,14 +968,14 @@ function axinfo = new_axinfo(axtype,taxis,faxis,axdat,hax,hzbounds4plot,name,t_m
       hold on
       for iformant = 1:nformants
         hply(iformant+1) = plot(frame_taxis_form,ftrack(iformant,:),formant_colors{iformant});
+        set(hply(iformant+1),'LineWidth',3);
       end
       hold off
 
       titlstr = sprintf('spectrogram(%s): %.1f sec, %d frames',name,t_range,axinfo.datlims(2));
       hxlab = xlabel('Time (sec)');
       hylab = ylabel('Hz');
-      y_low = hzbounds4plot(1); y_hi  = hzbounds4plot(2); y_range = y_hi - y_low;
-      axis(hax,[t_min t_max y_low y_hi]);
+      set_viewer_axlims(hax,t_min,t_max,hzbounds4plot,0);
       yes_tmarker_play = 0;
       yes_add_user_events = 1;
 
@@ -969,8 +992,7 @@ function axinfo = new_axinfo(axtype,taxis,faxis,axdat,hax,hzbounds4plot,name,t_m
       titlstr = sprintf('pitch(%s): %.1f sec, %d samples',name,t_range,axinfo.datlims(2));
       hxlab = xlabel('Time (sec)');
       hylab = ylabel('Hz');
-      y_low = min(axdat{1}); y_hi  = max(axdat{1}); y_range = y_hi - y_low;
-      axis(hax,[t_min t_max (y_low-yax_fact*y_range) (y_hi +yax_fact*y_range)]);
+      set_viewer_axlims(hax,t_min,t_max,axdat{1});
       yes_tmarker_play = 0;
       yes_add_user_events = 1;
       spec_marker_name.name = ' %.0f Hz ';
@@ -982,8 +1004,7 @@ function axinfo = new_axinfo(axtype,taxis,faxis,axdat,hax,hzbounds4plot,name,t_m
       titlstr = sprintf('ampl(%s): %.1f sec, %d samples',name,t_range,axinfo.datlims(2));
       hxlab = xlabel('Time (sec)');
       hylab = ylabel('ampl');
-      y_low = min(axdat{1}); y_hi  = max(axdat{1}); y_range = y_hi - y_low;
-      axis(hax,[t_min t_max (y_low-yax_fact*y_range) (y_hi +yax_fact*y_range)]);
+      set_viewer_axlims(hax,t_min,t_max,axdat{1});
       yes_tmarker_play = 0;
       yes_add_user_events = 1;
       spec_marker_name.name = ' %.2f ';
@@ -1002,7 +1023,7 @@ function axinfo = new_axinfo(axtype,taxis,faxis,axdat,hax,hzbounds4plot,name,t_m
         h_formant_name = text(t_min,0,sprintf(' F%d',iformant));
         set(hply(iformant+2),'UserData',h_formant_name);
       end
-      axis(hax,[t_min t_max 0 1]);
+      set_viewer_axlims(hax,t_min,t_max,[0 1],0);
       hold off
 
       % then do the real plotting
@@ -1843,4 +1864,19 @@ function untie_wavefig(iwavefig2untie)
   wavefig_idx2untie = get_wavefig_idx(iwavefig2untie);
   wavefig(wavefig_idx2untie).tied2fig = [];
   wavefig(wavefig_idx2untie).ntied2figs = 0;
+end
+
+function set_viewer_axlims(hax,t_min,t_max,dat4minmax,yax_fact2use)
+  global yax_fact
+  
+  if nargin < 5 || isempty(yax_fact2use), yax_fact2use = yax_fact; end
+
+  if ~any(~isnan(dat4minmax))
+    y_low = 0; y_hi = 1;
+  else
+    y_low = min(dat4minmax); y_hi  = max(dat4minmax);
+  end
+  y_range = y_hi - y_low; if y_range == 0, y_range = 1; end
+  
+  axis(hax,[t_min t_max (y_low-yax_fact2use*y_range) (y_hi +yax_fact2use*y_range)]);
 end
