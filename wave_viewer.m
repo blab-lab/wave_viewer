@@ -57,7 +57,7 @@ function viewer_end_state = wave_viewer(y,varargin)
   formant_marker_width = 4;
 
   nlpc_choices = 7:20;
-  preemph_range = [-0.99 0.99];
+  preemph_range = [-2 3];
   all_ms_framespecs = get_all_ms_framespecs();
 
   params.sigproc_params = struct('fs', 11025, ...
@@ -98,7 +98,8 @@ function viewer_end_state = wave_viewer(y,varargin)
         nfields = length(the_opt_val_fields);
         for ifield = 1:nfields
           the_field_name = the_opt_val_fields{ifield};
-          params.(the_opt_name).(the_field_name) = the_opt_val.(the_field_name);
+          the_field_val = the_opt_val.(the_field_name);
+          if ~isempty(the_field_val), params.(the_opt_name).(the_field_name) = the_field_val; end
         end
       end
       option_names(iopt) = []; option_values(iopt) = []; iopt = iopt - 1;
@@ -385,6 +386,8 @@ function viewer_end_state = wave_viewer(y,varargin)
         heigthen_ax(the_ax);
        case 'u' % unheighten = reduce
         unheigthen_ax(the_ax);
+       case 'c' % shortcut for "continue" button
+        contprogram([],[]);
        case 'm' % mark me for tying to some other wavefig
 	mark_wavefig4tying(my_iwavefig);
        case 't' % tie me to the wavefig marked for tying
