@@ -97,8 +97,8 @@ for ifr = 1:nframes
     imax_apyac = 0;
     ipyac2use = 0;
     pyac2use = 0;
-    pitch_period = 0;
-    pitch(ifr) = 0;
+    pitch_period = NaN;
+    pitch(ifr) = NaN;
   end
 end
 if yes_verbose
@@ -108,7 +108,9 @@ end
 if yes_verbose, fprintf('interpolating...'); end
 imidframe4interp = [1 imidframe nsamps];
 pitch4interp = [0 pitch 0];
+w = warning('off','MATLAB:interp1:NaNinY'); % turns off warning
 pre_pitchsig = interp1(imidframe4interp,pitch4interp,1:nsamps);
+warning(w);                                 % restores old warning prefs
 if yes_verbose, fprintf('done\n'); end
 
 if yes_verbose, fprintf('lowpass filtering...'); end
