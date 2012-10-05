@@ -29,6 +29,7 @@ function viewer_end_state = wave_viewer(y,varargin)
 %   'is_good_trial', 1, ...
 %   or: 'event_params',<an event_params struct from a viewer_end_state>
 
+  global yes_auto_process
   global wavefig nwavefigs
   global yax_fact tmarker_init_border
   global axborder_xl axborder_xr axborder_yl axborder_yu
@@ -43,6 +44,7 @@ function viewer_end_state = wave_viewer(y,varargin)
   
   if yes_profile, profile on; end
   
+  yes_auto_process = 0;
   yax_fact = 0.05;
   tmarker_init_border = 0.05;
   axborder_xl = 0.1; axborder_xr = 0.05;
@@ -122,8 +124,12 @@ function viewer_end_state = wave_viewer(y,varargin)
   end
   nopts_left = length(option_names);
   for iopt = 1:nopts_left
-    the_opt_name = option_names{iopt};
-    warning(sprintf('option(%s) not recognized',the_opt_name));
+    the_opt_name = option_names{iopt}; the_opt_val = option_values{iopt};
+    if strcmp(the_opt_name,'auto_process')
+      yes_auto_process = the_opt_val;
+    else
+      warning(sprintf('option(%s) not recognized',the_opt_name));
+    end
   end
   for i_param_struct = 1:n_param_structs
     eval(sprintf('%s = params.%s;',param_struct_names{i_param_struct},param_struct_names{i_param_struct}));
@@ -137,6 +143,7 @@ function viewer_end_state = wave_viewer(y,varargin)
   fprintf('yes_start_blocking(%d)\n',yes_start_blocking);
   
   hf = figure('Name',plot_params.name,'Position',plot_params.figpos);
+  set(hf,'DeleteFcn',@delete_func);
   wave_ax = new_wave_ax(y,sigproc_params,plot_params,event_params);
   ampl_ax = new_ampl_ax(wave_ax,sigproc_params);
   pitch_ax = new_pitch_ax(wave_ax,ampl_ax,sigproc_params);
@@ -144,7 +151,7 @@ function viewer_end_state = wave_viewer(y,varargin)
   spec_ax = new_spec_ax(gram_ax);
 
   update_wave_ax_tlims_from_gram_ax(wave_ax,gram_ax);
-
+  
   % reorder the axes with wave_ax on top
   nax = 0;
   nax = nax + 1; ax(nax) = spec_ax; set_ax_i(spec_ax,nax);
@@ -160,7 +167,14 @@ function viewer_end_state = wave_viewer(y,varargin)
   end
   cur_ax = ax(1);
   my_iwavefig = add_wavefig(hf,nax,ax);
-    
+
+  if yes_auto_process
+    viewer_end_state.name = 'cont';
+    if yes_profile, profile off; end
+    delete(hf);
+    return;
+  end
+  
   bgcolor = [.8 .8 .8]; padL = 10; padU = 10; padUinter = 2;
   horiz_orig = padU;
   colwidth = 70;
@@ -495,7 +509,6 @@ function viewer_end_state = wave_viewer(y,varargin)
   set(hf,'WindowButtonMotionFcn',@set_current_ax);
   set(hf,'KeyPressFcn',@key_press_func);
   set(hf,'ResizeFcn',@fig_resize_func);
-  set(hf,'DeleteFcn',@delete_func);
   if yes_profile, profile off; end
   if yes_start_blocking, uiwait(hf); end
 end
