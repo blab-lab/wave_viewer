@@ -1,7 +1,7 @@
 wave_viewer
 ===========
 
-Wave Viewer is a matlab-based analysis tool for speech waveforms.
+Wave Viewer is a Matlab-based analysis tool for speech waveforms.
 
     viewer_end_state = wave_viewer(y, [options])
     
