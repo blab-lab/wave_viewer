@@ -18,6 +18,8 @@ Wave Viewer takes a signal `y` and the following optional arguments:
 
 or a single argument `sigproc_params`, a parameter struct from the `viewer_end_state` returned by the function.
 
+Wave Viewer requires a few functions from Matlab's Signal Processing Toolbox (zp2ss and abcdchk).
+
 v0.1  
 June 2012  
 UCSF Speech Neuroscience Lab  
