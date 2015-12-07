@@ -10,7 +10,7 @@ else
 end
 
 axkids = get(hax,'Children');
-ih = dsearchn(axkids,h);
+ih = find(axkids==h);
 if isempty(ih), error('handle(%f) not a child of hax(%f)', h, hax); end
 remh_axkids = axkids;
 remh_axkids(ih) = [];
