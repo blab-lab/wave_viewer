@@ -272,6 +272,7 @@ function viewer_end_state = wave_viewer(y,varargin)
   function set_preemph(hObject,eventdata) % callback for h_slider_preemph
     sigproc_params.preemph = get(hObject, 'Value'); set(h_edit_preemph,'String',sigproc_params.preemph);
     set_alert4calcFx_if_true(last_sigproc_params.preemph ~= sigproc_params.preemph);
+    calcFx(hObject,eventdata);
   end
   
   n_framespecs = length(all_ms_framespecs.name);

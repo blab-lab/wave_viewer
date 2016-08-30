@@ -40,7 +40,7 @@ for iframe = 1:nframes;
   yframe = y((iframe-1)*nsamps_astep + (1:nsamps_frame));
   ftrack_mstaxis(iframe) = 1000*mean((iframe-1)*nsamps_astep + (1:nsamps_frame))/fs;
   ywinframe = win .* yframe;
-  if iframe > 1, params.Fprev = ftrack(:,iframe); else, params.Fprev = starting_formants; end
+  if iframe > 1, params.Fprev = ftrack(:,iframe-1); else params.Fprev = starting_formants; end
   output = ftrack_func(ywinframe,params);
   ftrack(:,iframe) = output{1};
   lpc_coeffs(:,iframe) = output{2};
@@ -99,6 +99,11 @@ lpc_magspec = get_lpc_magspec(lpc_coeffs,faxis,fs);
 for iformant = 1:nformants
   if iformant < nlpc_magspec_peaks
     formant(iformant) = faxis(lpc_magspec_peaks(iformant));
+  elseif iformant == nlpc_magspec_peaks
+    formant(iformant) = faxis(lpc_magspec_peaks(iformant));
+    if abs(Fprev(iformant)-formant(iformant)) > 75
+        formant(iformant) = Fprev(iformant);
+    end
   else
     formant(iformant) = Fprev(iformant);
   end
@@ -147,39 +152,39 @@ if isempty(F1prev) %++++++++++++++++ the first frame ++++++++++++++++++
     F1 = defaultF1; F2 = defaultF2; F3 = defaultF3;
   elseif abs(candidate_formant(1)-candidate_formant(2)) < min_initial_formant_sep
     F1 = candidate_formant(2); F2 = candidate_formant(3);
-    if 3 > ncand_formants, F3 = candidate_formant(4); else, F3 = defaultF3; end
+    if 3 > ncand_formants, F3 = candidate_formant(4); else F3 = defaultF3; end
   elseif 4 == ncand_formants
     F1 = candidate_formant(2); F2 = candidate_formant(3);
     F3 = candidate_formant(4);
   else
     F1 = candidate_formant(1); F2 = candidate_formant(2); 
-    if 3 > ncand_formants, F3 = defaultF3; else, F3 = candidate_formant(3); end
+    if 3 > ncand_formants, F3 = defaultF3; else F3 = candidate_formant(3); end
   end
 else %++++++++++++++++ all frames after the first ++++++++++++++++++
      %----Impose some formant continuity constraints -------------------
   in1 = find(abs(F1prev-candidate_formant) < max_allowable_F1dev);
   in2 = find(abs(F2prev-candidate_formant) < max_allowable_F2dev);
-  if length(in1) > 1, i1 = in1(2); else, i1 = in1; end;
-  if length(in2) > 1, i2 = in2(2); else, i2 = in2; end;
+  if length(in1) > 1, i1 = in1(2); else i1 = in1; end;
+  if length(in2) > 1, i2 = in2(2); else i2 = in2; end;
   
   switch (10*(~isempty(i1)) + (~isempty(i2)))
     case 11,
       if i1 == i2
-        if 1 > ncand_formants, F1 = F1prev; else, F1 = candidate_formant(1); end
-        if 2 > ncand_formants, F2 = F2prev; else, F2 = candidate_formant(2); end
-        if 3 > ncand_formants, F3 = F3prev; else, F3 = candidate_formant(3); end
+        if 1 > ncand_formants, F1 = F1prev; else F1 = candidate_formant(1); end
+        if 2 > ncand_formants, F2 = F2prev; else F2 = candidate_formant(2); end
+        if 3 > ncand_formants, F3 = F3prev; else F3 = candidate_formant(3); end
       else
         F1 = candidate_formant(i1); F2 = candidate_formant(i2); 
-        if i2 + 1 > ncand_formants, F3 = F3prev; else, F3 = candidate_formant(i2 + 1); end
+        if i2 + 1 > ncand_formants, F3 = F3prev; else F3 = candidate_formant(i2 + 1); end
       end;
     case 10,
       F1 = candidate_formant(i1);
-      if i1 + 1 > ncand_formants, F2 = F2prev; else, F2 = candidate_formant(i1 + 1); end
-      if i1 + 2 > ncand_formants, F3 = F3prev; else, F3 = candidate_formant(i1 + 2); end
+      if i1 + 1 > ncand_formants, F2 = F2prev; else F2 = candidate_formant(i1 + 1); end
+      if i1 + 2 > ncand_formants, F3 = F3prev; else F3 = candidate_formant(i1 + 2); end
     otherwise
       F1 = candidate_formant(1);
-      if 2 > ncand_formants, F2 = F2prev; else, F2 = candidate_formant(2); end
-      if 3 > ncand_formants, F3 = F3prev; else, F3 = candidate_formant(3); end
+      if 2 > ncand_formants, F2 = F2prev; else F2 = candidate_formant(2); end
+      if 3 > ncand_formants, F3 = F3prev; else F3 = candidate_formant(3); end
   end
 end
 
