@@ -15,10 +15,11 @@ if nargin < 9 || isempty(yes_verbose), yes_verbose = 0; end
 params.fs = fs;
 params.nlpc = nlpc_coeffs;
 switch ftrack_method
-  case 'colea', ftrack_func = @colea_ftrack_func; params.nformants_max = 3; 
-  case 'mine',  ftrack_func = @my_ftrack_func;    params.nformants_max = 3;
-  case 'mine2', ftrack_func = @my_ftrack_func2;   params.nformants_max = 4;
-  otherwise, error('formant tracking method(%s) unrecognized',ftrack_method);
+    case 'colea', ftrack_func = @colea_ftrack_func; params.nformants_max = 3; params.yes_trackperframe = 1;
+    case 'mine',  ftrack_func = @my_ftrack_func;    params.nformants_max = 3; params.yes_trackperframe = 1;
+    case 'mine2', ftrack_func = @my_ftrack_func2;   params.nformants_max = 4; params.yes_trackperframe = 1;
+    case 'praat', ftrack_func = @praat_ftrack_func; params.nformants_max = 5; params.yes_trackperframe = 0;
+    otherwise, error('formant tracking method(%s) unrecognized',ftrack_method);
 end
 if ~nformants, nformants = params.nformants_max; end
 if nformants > params.nformants_max, error('nformants(%d) > nformants_max(%d)',nformants,nformants_max); end
@@ -36,19 +37,27 @@ nframes = floor((nsamps - nsamps_frame)/nsamps_astep);
 ftrack = zeros(nformants,nframes);
 ftrack_mstaxis = zeros(1,nframes);
 lpc_coeffs = zeros((nlpc_coeffs+1),nframes);
-for iframe = 1:nframes;
-  yframe = y((iframe-1)*nsamps_astep + (1:nsamps_frame));
-  ftrack_mstaxis(iframe) = 1000*mean((iframe-1)*nsamps_astep + (1:nsamps_frame))/fs;
-  ywinframe = win .* yframe;
-  if iframe > 1, params.Fprev = ftrack(:,iframe-1); else params.Fprev = starting_formants; end
-  output = ftrack_func(ywinframe,params);
-  ftrack(:,iframe) = output{1};
-  lpc_coeffs(:,iframe) = output{2};
-  if yes_verbose
-    if ~rem(iframe,frames_per_dot), fprintf('.'); end
-    if ~rem(iframe,frames_per_dot*dots_per_line), fprintf('%d\n',iframe); end
-  end
+
+if params.yes_trackperframe % if tracker operates on a frame-by-frame basis within Matlab
+    for iframe = 1:nframes
+        yframe = y((iframe-1)*nsamps_astep + (1:nsamps_frame));
+        ftrack_mstaxis(iframe) = 1000*mean((iframe-1)*nsamps_astep + (1:nsamps_frame))/fs;
+        ywinframe = win .* yframe;
+        if iframe > 1, params.Fprev = ftrack(:,iframe-1); else params.Fprev = starting_formants; end
+        output = ftrack_func(ywinframe,params);
+        ftrack(:,iframe) = output{1};
+        lpc_coeffs(:,iframe) = output{2};
+        if yes_verbose
+            if ~rem(iframe,frames_per_dot), fprintf('.'); end
+            if ~rem(iframe,frames_per_dot*dots_per_line), fprintf('%d\n',iframe); end
+        end
+    end
+else                        % if we want to pass entire utterance to external tracker
+    output = ftrack_func(y,params);
+    ftrack = output{1};
+    lpc_coeffs = output{2};
 end
+
 ftrack_out(1:nformants,1:nframes) = ftrack(1:nformants,1:nframes);
 if yes_verbose
   fprintf('%d\n',iframe);
@@ -113,6 +122,22 @@ output{1} = formant;
 output{2} = lpc_coeffs;
 
 
+function output = praat_ftrack_func(y,params)
+
+fs = params.fs;
+faxis = params.faxis;
+nlpc_coeffs = params.nlpc;
+nformants = params.nformants;
+
+%%% Praat wrapper code here
+% write y to file
+% execute Praat script using params
+% load tracks from file
+
+output{1} = formant;
+output{2} = lpc_coeffs;
+
+
 % my version of the colea frmnts function,
 % orinally copyright (c) 1998 by Philipos C. Loizou
 function [F1,F2, F3]=my_frmnts(lpc_coeffs,fs)
@@ -164,11 +189,11 @@ else %++++++++++++++++ all frames after the first ++++++++++++++++++
      %----Impose some formant continuity constraints -------------------
   in1 = find(abs(F1prev-candidate_formant) < max_allowable_F1dev);
   in2 = find(abs(F2prev-candidate_formant) < max_allowable_F2dev);
-  if length(in1) > 1, i1 = in1(2); else i1 = in1; end;
-  if length(in2) > 1, i2 = in2(2); else i2 = in2; end;
+  if length(in1) > 1, i1 = in1(2); else i1 = in1; end
+  if length(in2) > 1, i2 = in2(2); else i2 = in2; end
   
   switch (10*(~isempty(i1)) + (~isempty(i2)))
-    case 11,
+    case 11
       if i1 == i2
         if 1 > ncand_formants, F1 = F1prev; else F1 = candidate_formant(1); end
         if 2 > ncand_formants, F2 = F2prev; else F2 = candidate_formant(2); end
@@ -176,8 +201,8 @@ else %++++++++++++++++ all frames after the first ++++++++++++++++++
       else
         F1 = candidate_formant(i1); F2 = candidate_formant(i2); 
         if i2 + 1 > ncand_formants, F3 = F3prev; else F3 = candidate_formant(i2 + 1); end
-      end;
-    case 10,
+      end
+    case 10
       F1 = candidate_formant(i1);
       if i1 + 1 > ncand_formants, F2 = F2prev; else F2 = candidate_formant(i1 + 1); end
       if i1 + 2 > ncand_formants, F3 = F3prev; else F3 = candidate_formant(i1 + 2); end
