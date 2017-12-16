@@ -132,7 +132,7 @@ nformants = params.nformants;
 %%% Praat wrapper code here
 % write y to file
 % execute Praat script using params
-% load tracks from file
+% load tracks from file written by Praat
 
 output{1} = formant;
 output{2} = lpc_coeffs;

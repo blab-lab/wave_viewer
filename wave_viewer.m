@@ -723,6 +723,11 @@ function gram_ax = new_gram_ax(wave_ax,ampl_ax,sigproc_params,plot_params)
   nformants = sigproc_params.nformants;
   preemph = sigproc_params.preemph;
   ampl_thresh4voicing = sigproc_params.ampl_thresh4voicing;
+  if isfield(sigproc_params,'ftrack_method')
+      ftrack_method = sigproc_params.ftrack_method;
+  else
+      ftrack_method = 'mine2';
+  end
 
   if yes_gray, my_colormap('my_gray',1,thresh_gray,max_gray); end
 
@@ -730,7 +735,7 @@ function gram_ax = new_gram_ax(wave_ax,ampl_ax,sigproc_params,plot_params)
   thresh4voicing_spec.ampl = ampl_axinfo.dat{1};
   thresh4voicing_spec.ampl_taxis = ampl_axinfo.params{1}.taxis;
   thresh4voicing_spec.ampl_thresh4voicing = ampl_thresh4voicing;
-  [axdat{2},params{2}] = make_ftrack_axdat(y,fs,params{1}.faxis,ms_framespec_form,nlpc,preemph,nformants,thresh4voicing_spec);
+  [axdat{2},params{2}] = make_ftrack_axdat(y,fs,params{1}.faxis,ms_framespec_form,nlpc,preemph,nformants,thresh4voicing_spec,ftrack_method);
   
   gram_ax = axes();
   axinfo = new_axinfo('gram',params{1}.taxis,params{1}.faxis,axdat,gram_ax,hzbounds4plot,wave_axinfo.name,params{1}.taxis(1),params{1}.taxis(end),params,wave_axinfo.event_params);
@@ -754,12 +759,17 @@ function update_gram_ax(gram_ax,wave_ax,ampl_ax,sigproc_params,plot_params)
   nformants = sigproc_params.nformants;
   preemph = sigproc_params.preemph;
   ampl_thresh4voicing = sigproc_params.ampl_thresh4voicing;
-
+  if isfield(sigproc_params,'ftrack_method')
+      ftrack_method = sigproc_params.ftrack_method;
+  else
+      ftrack_method = 'mine2';
+  end
+  
   [axdat{1},params{1}] = make_spectrogram_axdat(y,fs,ms_framespec_gram,nfft,preemph);
   thresh4voicing_spec.ampl = ampl_axinfo.dat{1};
   thresh4voicing_spec.ampl_taxis = ampl_axinfo.params{1}.taxis;
   thresh4voicing_spec.ampl_thresh4voicing = ampl_thresh4voicing;
-  [axdat{2},params{2}] = make_ftrack_axdat(y,fs,params{1}.faxis,ms_framespec_form,nlpc,preemph,nformants,thresh4voicing_spec);
+  [axdat{2},params{2}] = make_ftrack_axdat(y,fs,params{1}.faxis,ms_framespec_form,nlpc,preemph,nformants,thresh4voicing_spec,ftrack_method);
 
   taxis = params{1}.taxis;
   faxis = params{1}.faxis;
@@ -802,8 +812,8 @@ function [the_axdat,the_params] = make_spectrogram_axdat(y,fs,ms_framespec,nfft,
   the_params.taxis = frame_taxis_gram;
 end
 
-function [the_axdat,the_params] = make_ftrack_axdat(y,fs,faxis,ms_framespec,nlpc,preemph,nformants,thresh4voicing_spec)
-  [ftrack,ftrack_msT,lpc_coeffs] = get_formant_tracks(y,fs,faxis,ms_framespec,nlpc,preemph,nformants,'mine2',0);
+function [the_axdat,the_params] = make_ftrack_axdat(y,fs,faxis,ms_framespec,nlpc,preemph,nformants,thresh4voicing_spec,ftrack_method)
+  [ftrack,ftrack_msT,lpc_coeffs] = get_formant_tracks(y,fs,faxis,ms_framespec,nlpc,preemph,nformants,ftrack_method,0);
   [nforms,nframes_form] = size(ftrack);
   frame_taxis_form = ftrack_msT/1000;
   ampl4form = interp1(thresh4voicing_spec.ampl_taxis,thresh4voicing_spec.ampl,frame_taxis_form);
