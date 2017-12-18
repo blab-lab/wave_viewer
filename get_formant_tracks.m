@@ -131,8 +131,32 @@ nformants = params.nformants;
 
 %%% Praat wrapper code here
 % write y to file
+audiowrite('temp_wav.wav',y,fs)
+
+% set params. 
+% Note: these should be parsed from input to get_formant_tracks but are
+% hard-coded here for testing
+max_formant = 5000;
+time_step = 0.003;
+preemphasis = 50;
+
 % execute Praat script using params
-% load tracks from file written by Praat
+status = system(['/Applications/Praat.app/Contents/MacOS/Praat --run get_formant_tracks.praat "' pwd '" "temp_wav" ' num2str(max_formant) ' ' num2str(params.nformants) ' ' num2str(time_step) ' ' num2str(preemphasis) ' ' num2str(params.fs)]);
+if status ~= 0
+    error('Something went wrong in Praat analysis')
+end
+
+% load formant tracks from file written by Praat and put in 'formant' output
+formant_vals = readtable('temp_wav_formants.txt','Delimiter','\t');
+formant(1,:) = formant_vals.F1_Hz_';
+formant(2,:) = formant_vals.F2_Hz_';
+formant(3,:) = formant_vals.F3_Hz_';
+
+% load LPC values from file written by Praat and put in 'lpc_coeffs' output
+lpc_coeffs = readtable('temp_wav_lpc.txt','Delimiter','\t','ReadVariableNames', 0);
+
+% clean up by deleting files that were created
+delete temp_wav.wav temp_wav_formants.txt temp_wav_lpc.txt
 
 output{1} = formant;
 output{2} = lpc_coeffs;
