@@ -10,6 +10,7 @@ form Measure formant values for segments in a textgrid
 	sentence file_name: temp_wav
     positive maximum_formant 5500
     positive number_of_formants 5
+	positive window_size 0.025
     positive time_step 0.005
 	positive preemphasis 50
 	positive fs 11025
@@ -21,7 +22,7 @@ Read from file... 'directory_name$'/'wav_name$'
 soundID1$ = selected$("Sound")
 
 #extract formants
-To Formant (burg)... 0 'number_of_formants' 'maximum_formant' 'time_step' 'preemphasis'
+To Formant (burg)... 'time_step' 'number_of_formants' 'maximum_formant' 'window_size' 'preemphasis'
 formant = selected ("Formant")
 
 #write formants

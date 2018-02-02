@@ -53,12 +53,17 @@ if params.yes_trackperframe % if tracker operates on a frame-by-frame basis with
         end
     end
 else                        % if we want to pass entire utterance to external tracker
+    params.window_size = ms_awin/1000;
+    params.step_size = ms_astep/1000;
+    params.nframes = nframes;
     output = ftrack_func(y,params);
     ftrack = output{1};
     lpc_coeffs = output{2};
+    ftrack_mstaxis = output{3};
 end
 
-ftrack_out(1:nformants,1:nframes) = ftrack(1:nformants,1:nframes);
+% ftrack_out(1:nformants,1:nframes) = ftrack(1:nformants,1:nframes);
+ftrack_out(1:nformants,:) = ftrack(1:nformants,:); %removing nframes allows for praat tracking
 if yes_verbose
   fprintf('%d\n',iframe);
 end
@@ -123,6 +128,10 @@ output{2} = lpc_coeffs;
 
 
 function output = praat_ftrack_func(y,params)
+% execute Praat script using params
+%must be in git repo folder to run praat function, so save current location and go there
+curr_dir = pwd;
+cd('C:\Program Files\git\wave_viewer')
 
 fs = params.fs;
 faxis = params.faxis;
@@ -133,33 +142,37 @@ nformants = params.nformants;
 % write y to file
 audiowrite('temp_wav.wav',y,fs)
 
-% set params. 
-% Note: these should be parsed from input to get_formant_tracks but are
-% hard-coded here for testing
-max_formant = 5000;
-time_step = 0.003;
+% set praat params that are not changeable
+max_formant = 5500;
 preemphasis = 50;
 
-% execute Praat script using params
-status = system(['/Applications/Praat.app/Contents/MacOS/Praat --run get_formant_tracks.praat "' pwd '" "temp_wav" ' num2str(max_formant) ' ' num2str(params.nformants) ' ' num2str(time_step) ' ' num2str(preemphasis) ' ' num2str(params.fs)]);
+status = system(['"C:\Program Files\Praat\Praat.exe" --run get_formant_tracks.praat "' pwd '" "temp_wav" ' num2str(max_formant) ' ' num2str(params.nlpc/2) ' ' num2str(params.window_size) ' ' num2str(params.step_size) ' ' num2str(preemphasis) ' ' num2str(params.fs)]);
 if status ~= 0
     error('Something went wrong in Praat analysis')
 end
 
 % load formant tracks from file written by Praat and put in 'formant' output
 formant_vals = readtable('temp_wav_formants.txt','Delimiter','\t');
+
+%find number of formant values returbned by praat
 formant(1,:) = formant_vals.F1_Hz_';
 formant(2,:) = formant_vals.F2_Hz_';
 formant(3,:) = formant_vals.F3_Hz_';
 
-% load LPC values from file written by Praat and put in 'lpc_coeffs' output
-lpc_coeffs = readtable('temp_wav_lpc.txt','Delimiter','\t','ReadVariableNames', 0);
+%find times of formants
+msaxis = formant_vals.time_s_';
 
-% clean up by deleting files that were created
+% load LPC values from file written by Praat and put in 'lpc_coeffs' output
+lpc_coeffs = dlmread('temp_wav_lpc.txt','\t');
+
+% clean up by deleting files that were created and return to previous
+% directory
 delete temp_wav.wav temp_wav_formants.txt temp_wav_lpc.txt
+cd(curr_dir)
 
 output{1} = formant;
 output{2} = lpc_coeffs;
+output{3} = msaxis * 1000; %covert from s to ms
 
 
 % my version of the colea frmnts function,
