@@ -131,7 +131,7 @@ function output = praat_ftrack_func(y,params)
 % execute Praat script using params
 %must be in git repo folder to run praat function, so save current location and go there
 curr_dir = pwd;
-cd('C:\Program Files\git\wave_viewer')
+cd('C:\Users\Public\Documents\GitHub\wave_viewer')
 
 fs = params.fs;
 faxis = params.faxis;
@@ -146,7 +146,7 @@ audiowrite('temp_wav.wav',y,fs)
 max_formant = 5500;
 preemphasis = 50;
 
-status = system(['"C:\Program Files\Praat\Praat.exe" --run get_formant_tracks.praat "' pwd '" "temp_wav" ' num2str(max_formant) ' ' num2str(params.nlpc/2) ' ' num2str(params.window_size) ' ' num2str(params.step_size) ' ' num2str(preemphasis) ' ' num2str(params.fs)]);
+status = system(['"C:\Users\Public\Desktop\Praat.exe" --run get_formant_tracks.praat "' pwd '" "temp_wav" ' num2str(max_formant) ' ' num2str(params.nlpc/2) ' ' num2str(params.window_size) ' ' num2str(params.step_size) ' ' num2str(preemphasis) ' ' num2str(params.fs)]);
 if status ~= 0
     error('Something went wrong in Praat analysis')
 end
