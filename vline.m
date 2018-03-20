@@ -2,7 +2,7 @@ function hl = vline(val,color,linestyle)
 % function hl = vline(val,color,linestyle)
 
 a = axis;
-hl = line(val*ones(2,1),a(3:4));
+hl = line(val*ones(2,1),a(3:4),'LineWidth',1);
 if nargin >= 2
   set(hl,'Color',color);
 end
