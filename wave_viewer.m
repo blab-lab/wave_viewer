@@ -731,7 +731,7 @@ function gram_ax = new_gram_ax(wave_ax,ampl_ax,sigproc_params,plot_params)
 
   if yes_gray, my_colormap('my_gray',1,thresh_gray,max_gray); end
 
-  [axdat{1},params{1}] = make_spectrogram_axdat(y,fs,ms_framespec_gram,nfft,preemph);
+  [axdat{1},params{1}] = make_spectrogram_axdat(y,fs,ms_framespec_gram,nfft,preemph,sigproc_params.ftrack_method);
   thresh4voicing_spec.ampl = ampl_axinfo.dat{1};
   thresh4voicing_spec.ampl_taxis = ampl_axinfo.params{1}.taxis;
   thresh4voicing_spec.ampl_thresh4voicing = ampl_thresh4voicing;
@@ -765,7 +765,7 @@ function update_gram_ax(gram_ax,wave_ax,ampl_ax,sigproc_params,plot_params)
       ftrack_method = 'praat';
   end
   
-  [axdat{1},params{1}] = make_spectrogram_axdat(y,fs,ms_framespec_gram,nfft,preemph);
+  [axdat{1},params{1}] = make_spectrogram_axdat(y,fs,ms_framespec_gram,nfft,preemph,sigproc_params.ftrack_method);
   thresh4voicing_spec.ampl = ampl_axinfo.dat{1};
   thresh4voicing_spec.ampl_taxis = ampl_axinfo.params{1}.taxis;
   thresh4voicing_spec.ampl_thresh4voicing = ampl_thresh4voicing;
@@ -798,8 +798,13 @@ function update_gram_ax(gram_ax,wave_ax,ampl_ax,sigproc_params,plot_params)
   set(gram_ax,'UserData',gram_axinfo);
 end
 
-function [the_axdat,the_params] = make_spectrogram_axdat(y,fs,ms_framespec,nfft,preemph)
-  [absS,F,msT,window_size,frame_size] = my_specgram(y,[],fs,ms_framespec,nfft,preemph,0);
+function [the_axdat,the_params] = make_spectrogram_axdat(y,fs,ms_framespec,nfft,preemph,ftrack_method)
+  if strcmp(ftrack_method, 'praat')
+      preemph4display = preemph + 0.95;
+  else
+      preemph4display = preemph;
+  end
+  [absS,F,msT,window_size,frame_size] = my_specgram(y,[],fs,ms_framespec,nfft,preemph4display,0);
   [nchans,nframes_gram] = size(absS);
   faxis_gram = F;
   frame_taxis_gram = msT/1000;
