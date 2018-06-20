@@ -149,7 +149,11 @@ audiowrite('temp_wav.wav',y,fs)
 max_formant = 5500;
 preemphasis = 50;
 
-status = system(['"C:\Users\Public\Desktop\Praat.exe" --run get_formant_tracks.praat "' pwd '" "temp_wav" ' num2str(max_formant) ' ' num2str(params.nlpc/2) ' ' num2str(params.window_size) ' ' num2str(params.step_size) ' ' num2str(preemphasis) ' ' num2str(params.fs)]);
+if ismac
+    status = system(['"/Applications/Praat.app/Contents/MacOS/Praat" --run get_formant_tracks.praat "' pwd '" "temp_wav" ' num2str(max_formant) ' ' num2str(params.nlpc/2) ' ' num2str(params.window_size) ' ' num2str(params.step_size) ' ' num2str(preemphasis) ' ' num2str(params.fs)]);
+else
+    status = system(['"C:\Users\Public\Desktop\Praat.exe" --run get_formant_tracks.praat "' pwd '" "temp_wav" ' num2str(max_formant) ' ' num2str(params.nlpc/2) ' ' num2str(params.window_size) ' ' num2str(params.step_size) ' ' num2str(preemphasis) ' ' num2str(params.fs)]);
+end
 if status ~= 0
     error('Something went wrong in Praat analysis')
 end
