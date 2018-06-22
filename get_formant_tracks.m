@@ -158,15 +158,31 @@ if status ~= 0
     error('Something went wrong in Praat analysis')
 end
 
+% clean up praat output text file to eliminate uniterpretable characters
+A = regexp( fileread('temp_wav_formants.txt'), '\n', 'split');
+headers = strsplit(A{1},' ');
+for i = 1:length(headers)
+    curTxt = headers{i};
+    startUnits = strfind(curTxt,'(');
+    if ~isempty(startUnits)
+        curTxt = curTxt(1:startUnits-1);
+        headers{i} = curTxt;
+    end
+end
+A{1} = strjoin(headers,'\t');
+fid = fopen('temp_wav_formants.txt','w');
+fprintf(fid, '%s\n', A{:});
+fclose(fid);
+
 % load formant tracks from file written by Praat and put in 'formant' output
 formant_vals = readtable('temp_wav_formants.txt','Delimiter','\t');
 
 %find number of formant values returbned by praat
-formant(1,:) = formant_vals.F1_Hz_';
-formant(2,:) = formant_vals.F2_Hz_';
+formant(1,:) = formant_vals.F1';
+formant(2,:) = formant_vals.F2';
 
 %find times of formants
-msaxis = formant_vals.time_s_';
+msaxis = formant_vals.time';
 
 % load LPC values from file written by Praat and put in 'lpc_coeffs' output
 lpc_coeffs = dlmread('temp_wav_lpc.txt','\t');
