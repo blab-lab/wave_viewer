@@ -160,7 +160,7 @@ end
 
 % clean up praat output text file to eliminate uniterpretable characters
 A = regexp( fileread('temp_wav_formants.txt'), '\n', 'split');
-headers = strsplit(A{1},' ');
+headers = strsplit(A{1},'\t');
 for i = 1:length(headers)
     curTxt = headers{i};
     startUnits = strfind(curTxt,'(');
