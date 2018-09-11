@@ -161,6 +161,9 @@ end
 % clean up praat output text file to eliminate uniterpretable characters
 A = regexp( fileread('temp_wav_formants.txt'), '\n', 'split');
 headers = strsplit(A{1},'\t');
+if length(headers) == 1 %for some reason Praat sometimes uses a space to separate headers
+    headers = strsplit(A{1},' ');
+end
 for i = 1:length(headers)
     curTxt = headers{i};
     startUnits = strfind(curTxt,'(');
