@@ -31,10 +31,10 @@ Down to Table... yes yes 6 no 3 yes 3 no
 Save as tab-separated file... 'directory_name$'/'formant_name$'
 
 #extract LPC parameters
-selectObject: formant
-To LPC... fs
-Down to Matrix (lpc)
+#selectObject: formant
+#To LPC... fs
+#Down to Matrix (lpc)
 
 #save LPC parameters
-lpc_name$ = file_name$ + "_lpc.txt"
-Save as headerless spreadsheet file... 'directory_name$'/'lpc_name$'
+#lpc_name$ = file_name$ + "_lpc.txt"
+#Save as headerless spreadsheet file... 'directory_name$'/'lpc_name$'

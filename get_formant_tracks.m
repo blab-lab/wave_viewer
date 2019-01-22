@@ -188,11 +188,11 @@ formant(2,:) = formant_vals.F2';
 msaxis = formant_vals.time';
 
 % load LPC values from file written by Praat and put in 'lpc_coeffs' output
-lpc_coeffs = dlmread('temp_wav_lpc.txt','\t');
-
+% lpc_coeffs = dlmread('temp_wav_lpc.txt','\t');
+lpc_coeffs = [];
 % clean up by deleting files that were created and return to previous
 % directory
-delete temp_wav.wav temp_wav_formants.txt temp_wav_lpc.txt
+delete temp_wav.wav temp_wav_formants.txt %temp_wav_lpc.txt
 cd(curr_dir)
 
 output{1} = formant;
