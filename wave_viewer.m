@@ -635,6 +635,8 @@ marker_captured = 0;
                     unheighten_ax(the_ax);
                 case 'c' % shortcut for "continue" button
                     contprogram([],[]);
+                case 't' % CWN custom. shortcut for toggle show/hide formants
+                    toggle_formants;
                 otherwise
                     fprintf('len(%d)\n',length(event.Key));
                     fprintf('%d,',event.Key);
@@ -1281,6 +1283,7 @@ switch axinfo.type
         for iformant = 1:nformants
             hply(iformant+1) = plot(frame_taxis_form,ftrack(iformant,:),fig_params.formant_colors{iformant});
             set(hply(iformant+1),'LineWidth',3);
+            %set(hply(iformant+1),'Visible','off'); % RPK CHANGE DO NOT TRACK
         end
         hold off
         
