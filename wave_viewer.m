@@ -245,7 +245,9 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
             '"rightarrow": advance tmarker_spec by one frame\n', ...
             '"leftarrow": retreat tmarker_spec by one frame\n', ...
             '"e": expand\n', ...
+            '"q": quick-expand between first and last user events', ...
             '"w": widen\n', ...
+            '"t": toggle formants on/off\n', ...
             '"h": heighten\n', ...
             '"u": unheighten = reduce\n']);
         helpdlg(helpstr);
@@ -627,8 +629,12 @@ marker_captured = 0;
                     incdec_tmarker_spec(0,the_ax);
                 case 'e' % expand
                     expand_btw_ax_tmarkers(the_ax,tAx,fAx);
+                case 'q' % expand between first and last user events
+                    expand_btw_ax_uev(the_ax,tAx,fAx);
                 case 'w' % widen
                     widen_ax_view(the_ax,tAx,fAx);
+                case 't' % toggle show/hide formants
+                    toggle_formants;
                 case 'h' % heighten
                     heighten_ax(the_ax);
                 case 'u' % unheighten = reduce
@@ -1938,6 +1944,32 @@ if t_tmarker_spec < new_t_low || t_tmarker_spec > new_t_hi
 else
     update_tmarker(axinfo.h_tmarker_spec,[]);
 end
+end
+
+function expand_btw_ax_uev(ax,tAx,fAx) 
+[~,t_spec,~,t_user_events] = get_ax_tmarker_times(ax);
+if length(t_user_events) < 2; return; end
+t_low = t_user_events(1) - 0.05;
+t_hi = t_user_events(end) + 0.05;
+if t_low > t_hi
+    warning('First user event must precede last user event.')
+    return
+end
+
+%update axes with new tmarker times
+if any(ax == tAx)
+    for i = 1:length(tAx)
+        update_ax_tmarkers(tAx(i),t_low,t_spec,t_hi,t_user_events);
+    end
+else
+    for i = 1:length(fAx)
+        update_ax_tmarkers(fAx(i),t_low,t_spec,t_hi,t_user_events);
+    end
+end
+
+%adjust the axes' boundaries
+expand_btw_ax_tmarkers(ax,tAx,fAx)
+
 end
 
 function widen_ax_view(ax,tAx,fAx)
