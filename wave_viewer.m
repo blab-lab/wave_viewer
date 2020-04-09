@@ -245,7 +245,7 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
             '"rightarrow": advance tmarker_spec by one frame\n', ...
             '"leftarrow": retreat tmarker_spec by one frame\n', ...
             '"e": expand\n', ...
-            '"q": quick-expand between first and last user events', ...
+            '"q": quick-expand between first and last user events\n', ...
             '"w": widen\n', ...
             '"t": toggle formants on/off\n', ...
             '"h": heighten\n', ...
@@ -1948,9 +1948,15 @@ end
 
 function expand_btw_ax_uev(ax,tAx,fAx) 
 [~,t_spec,~,t_user_events] = get_ax_tmarker_times(ax);
-if length(t_user_events) < 2; return; end
-t_low = t_user_events(1) - 0.05;
-t_hi = t_user_events(end) + 0.05;
+if length(t_user_events) >= 2
+    t_low = t_user_events(1) - 0.05;
+    t_hi = t_user_events(end) + 0.05;
+elseif length(t_user_events) == 1
+    t_low = t_user_events(1) - 0.2;
+    t_hi = t_user_events(1) + 0.2;
+else
+    return;
+end
 if t_low > t_hi
     warning('First user event must precede last user event.')
     return
