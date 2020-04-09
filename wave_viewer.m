@@ -1972,9 +1972,9 @@ for i = 1:length(tAx) %find the axis with the most restrictive start and end tim
         tAx_earliest_end_time = tAx(i).UserData.taxis(end);
     end
 end
-t_low_ax_min = tAx_latest_start_time + fig_params.tmarker_init_border*tmarker_buffer*2; %set floor and cieling so all axes are aligned
+t_low_ax_min = tAx_latest_start_time + fig_params.tmarker_init_border*tmarker_buffer*2; %set floor and ceiling so all axes are aligned
 t_hi_ax_max = tAx_earliest_end_time - fig_params.tmarker_init_border*tmarker_buffer*2;
-if t_low <= t_low_ax_min %conform to floor and cieling if necessary
+if t_low <= t_low_ax_min %conform to floor and ceiling if necessary
     t_low = t_low_ax_min;
 end
 if t_hi >= t_hi_ax_max
