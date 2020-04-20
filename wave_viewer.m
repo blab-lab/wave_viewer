@@ -1961,6 +1961,9 @@ else
     return;
 end
 
+    %CWN 4/2020 -- The alignment checking in the next 19 lines could be
+    %modularized and called whenever the time markers move. For now, just
+    %calling it locally in the expand_btw_ax_uev function.
 %finds proper axis boundaries and tmarker times
 tAx_latest_start_time = intmin;
 tAx_earliest_end_time = intmax;
