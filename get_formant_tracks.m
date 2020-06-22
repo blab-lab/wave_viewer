@@ -181,8 +181,10 @@ fclose(fid);
 formant_vals = readtable('temp_wav_formants.txt','Delimiter','\t');
 
 %find number of formant values returbned by praat
-formant(1,:) = formant_vals.F1';
-formant(2,:) = formant_vals.F2';
+for nf = 1:nformants
+    form=['F' num2str(nf)];
+    formant(nf,:) = formant_vals.(form)';
+end
 
 %find times of formants
 msaxis = formant_vals.time';
