@@ -21,7 +21,7 @@ or a single argument `sigproc_params`, a parameter struct from the `viewer_end_s
 Wave Viewer requires a few functions from Matlab's Signal Processing Toolbox (zp2ss and abcdchk).
 
 =======
-v2.0  
+v1.1  
 January 2021
 UW-Madison Speech Motor Neuroscience Group
 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.13839.svg)](http://dx.doi.org/10.5281/zenodo.13839)
