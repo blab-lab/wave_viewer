@@ -245,7 +245,9 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
             '"rightarrow": advance tmarker_spec by one frame\n', ...
             '"leftarrow": retreat tmarker_spec by one frame\n', ...
             '"e": expand\n', ...
+            '"q": quick-expand between first and last user events\n', ...
             '"w": widen\n', ...
+            '"f": formant toggle on/off\n', ...
             '"h": heighten\n', ...
             '"u": unheighten = reduce\n']);
         helpdlg(helpstr);
@@ -627,8 +629,12 @@ marker_captured = 0;
                     incdec_tmarker_spec(0,the_ax);
                 case 'e' % expand
                     expand_btw_ax_tmarkers(the_ax,tAx,fAx);
+                case 'q' % expand between first and last user events
+                    expand_btw_ax_uev(the_ax,tAx,fAx);
                 case 'w' % widen
                     widen_ax_view(the_ax,tAx,fAx);
+                case 'f' % toggle show/hide formants
+                    toggle_formants;
                 case 'h' % heighten
                     heighten_ax(the_ax);
                 case 'u' % unheighten = reduce
@@ -1941,6 +1947,64 @@ if t_tmarker_spec < new_t_low || t_tmarker_spec > new_t_hi
 else
     update_tmarker(axinfo.h_tmarker_spec,[]);
 end
+end
+
+function expand_btw_ax_uev(ax,tAx,fAx) 
+[~,t_spec,~,t_user_events] = get_ax_tmarker_times(ax);
+fig_params = get_fig_params;
+if length(t_user_events) >= 2
+    tmarker_buffer = 0.05;
+    t_low = t_user_events(1) - tmarker_buffer;
+    t_hi = t_user_events(end) + tmarker_buffer;
+elseif length(t_user_events) == 1
+    tmarker_buffer = 0.2;
+    t_low = t_user_events(1) - tmarker_buffer;
+    t_hi = t_user_events(1) + tmarker_buffer;
+else
+    return;
+end
+
+    %CWN 4/2020 -- The alignment checking in the next 19 lines could be
+    %modularized and called whenever the time markers move. For now, just
+    %calling it locally in the expand_btw_ax_uev function.
+%finds proper axis boundaries and tmarker times
+tAx_latest_start_time = intmin;
+tAx_earliest_end_time = intmax;
+for i = 1:length(tAx) %find the axis with the most restrictive start and end times
+    if tAx(i).UserData.taxis(1) > tAx_latest_start_time
+        tAx_latest_start_time = tAx(i).UserData.taxis(1);
+    end
+    if tAx(i).UserData.taxis(end) < tAx_earliest_end_time
+        tAx_earliest_end_time = tAx(i).UserData.taxis(end);
+    end
+end
+t_low_ax_min = tAx_latest_start_time + fig_params.tmarker_init_border*tmarker_buffer*2; %set floor and ceiling so all axes are aligned
+t_hi_ax_max = tAx_earliest_end_time - fig_params.tmarker_init_border*tmarker_buffer*2;
+if t_low <= t_low_ax_min %conform to floor and ceiling if necessary
+    t_low = t_low_ax_min;
+end
+if t_hi >= t_hi_ax_max
+    t_hi = t_hi_ax_max;
+end
+if t_low > t_hi
+    warning('First user event must precede last user event.')
+    return
+end
+
+%update axes with new tmarker times
+if any(ax == tAx)
+    for i = 1:length(tAx)
+        update_ax_tmarkers(tAx(i),t_low,t_spec,t_hi,t_user_events);
+    end
+else
+    for i = 1:length(fAx)
+        update_ax_tmarkers(fAx(i),t_low,t_spec,t_hi,t_user_events);
+    end
+end
+
+%adjust the axes' boundaries
+expand_btw_ax_tmarkers(ax,tAx,fAx)
+
 end
 
 function widen_ax_view(ax,tAx,fAx)
