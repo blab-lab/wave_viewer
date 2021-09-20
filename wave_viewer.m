@@ -1953,8 +1953,6 @@ if length(t_user_events) >= 2
     tmarker_buffer = 0.05;
     t_low = min(t_user_events) - tmarker_buffer; 
     t_hi = max(t_user_events) + tmarker_buffer; 
-%     t_low = t_user_events(1) - tmarker_buffer;
-%     t_hi = t_user_events(end) + tmarker_buffer;
 elseif length(t_user_events) == 1
     tmarker_buffer = 0.2;
     t_low = t_user_events(1) - tmarker_buffer;
