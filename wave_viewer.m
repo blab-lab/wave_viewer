@@ -4,7 +4,7 @@ function viewer_end_state = wave_viewer(y,varargin)
 %   VIEWER_END_STATE is provided, wave_viewer() will start blocked, otherwise command prompt is returned
 
 yes_profile = 0;
-if yes_profile, profile on; end
+if yes_profile, profile on; end %#ok<*UNRCH> 
 
 %% param defaults
 
@@ -47,8 +47,8 @@ while 1
         break;
     end
     the_opt_name = option_names{iopt}; the_opt_val = option_values{iopt};
-    opt_idx = strmatch(the_opt_name,'sigmat');
-    if ~isempty(opt_idx)
+    opt_idx = find(matches('sigmat',the_opt_name));
+    if opt_idx
         sigmat = the_opt_val;
         option_names(iopt) = []; option_values(iopt) = []; iopt = iopt - 1;
     end
@@ -65,8 +65,8 @@ while 1
         break;
     end
     the_opt_name = option_names{iopt}; the_opt_val = option_values{iopt};
-    opt_idx = strmatch(the_opt_name,param_struct_names);
-    if ~isempty(opt_idx)
+    opt_idx = find(matches(param_struct_names,the_opt_name));
+    if opt_idx
         if ~isempty(the_opt_val)
             the_opt_val_fields = fieldnames(the_opt_val);
             nfields = length(the_opt_val_fields);
@@ -87,8 +87,8 @@ for i_param_struct = 1:n_param_structs
         iopt = iopt + 1; if iopt > nopts_left, break; end
         the_opt_name = option_names{iopt}; the_opt_val = option_values{iopt};
         the_params_struct_name = param_struct_names{i_param_struct};
-        opt_idx = strmatch(the_opt_name,fieldnames(p.(the_params_struct_name)));
-        if ~isempty(opt_idx)
+        opt_idx = find(matches(fieldnames(p.(the_params_struct_name)),the_opt_name));
+        if opt_idx
             if ~isempty(the_opt_val), p.(the_params_struct_name).(the_opt_name) = the_opt_val; end
             option_names(iopt) = []; option_values(iopt) = []; iopt = iopt - 1;
         end
@@ -212,7 +212,7 @@ padYSmall = .002;
 horiz_orig = padYBig;
 
 buttonWidth = .9;
-buttonHeight = .05;
+buttonHeight = .045;
 buttonFontSize = .4;
 sliderHeight = .025;
 dropdownHeight = .03;
@@ -228,6 +228,41 @@ tinyPosYOffset = textPosYOffset*.75;
 hbutton.calc = [];      % not sure why these are set: could be
 normal_bgcolor = [];    % in case calcFx is somehow called by another
 alert4calcFx = 0;       % function before the calc button is created
+
+% jump-to trial text box and button
+jumptoTrialTextBox = [padL horiz_orig buttonWidth/2 buttonHeight];
+hbutton.jumptoTrialBox = uicontrol(p.guidata.buttonPanel,'Style','edit',...
+    'String', num2str(hf.Name(7:end-1)), 'Units', 'Normalized', 'Position', jumptoTrialTextBox, ...
+    'FontUnits', 'Normalized', 'FontSize', buttonFontSize, ...
+    'Callback', @check4validTrialNum);
+    function check4validTrialNum(hObject,eventdata) %#ok<*INUSD> 
+        %validate positive numbers
+        newTrialNum = str2double(hbutton.jumptoTrialBox.String);
+        if newTrialNum < 1
+            newTrialNum = 1;
+        end
+        if isnan(newTrialNum) % reset back to current trial if can't convert to double
+            newTrialNum = hf.Name(7:end-1); 
+        end
+        % Can't validate upper limit of trial num here. wave_viewer doesn't know how many trial there are.
+        % That validation happens in audioGUI.m
+        set(hbutton.jumptoTrialBox, 'String', num2str(newTrialNum));
+    end
+
+jumptoTrialButton = [padL+(buttonWidth/2) horiz_orig buttonWidth/2 buttonHeight];
+hbutton.jumptoTrialButton = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
+    'String', 'jump', 'Units', 'Normalized', 'Position', jumptoTrialButton, ...
+    'FontUnits', 'Normalized', 'FontSize', buttonFontSize, ...
+    'Callback', @jumptoProgram);
+horiz_orig = horiz_orig + buttonHeight + padYButton; % increment horiz_orig only after text box AND button
+    function jumptoProgram(hObject,eventdata) % callback for h_button_jumptoTrialButton
+        if check4alert4calcFx('jumping')
+            viewer_end_state.name = 'jump';
+            viewer_end_state.jumpto_trial = str2double(hbutton.jumptoTrialBox.String);
+            delete(hf);
+        end
+    end
+
 
 % help button
 helpButtonPos = [padL horiz_orig buttonWidth buttonHeight];
@@ -407,7 +442,7 @@ hslider.max_gray = uicontrol(p.guidata.buttonPanel,'Style','slider',...
     'Min',0,'Max',1,'SliderStep', [0.01 0.1],...
     'Value',p.plot_params.max_gray, ...
     'Units','Normalized','Position',maxGraySliderPos,...
-    'Callback',@set_max_gray);
+    'Callback',@set_max_gray); %#ok<STRNU> 
 horiz_orig = horiz_orig + sliderHeight + padYSmall;
 
 % gram color: text
@@ -437,7 +472,7 @@ end
 if ~ischar(p.sigproc_params.ms_framespec_gram)
     error('sorry: we only support named ms_framespecs right now');
 end
-initial_dropdown_value = strmatch(p.sigproc_params.ms_framespec_gram,all_ms_framespecs.name);
+initial_dropdown_value = find(matches(all_ms_framespecs.name,p.sigproc_params.ms_framespec_gram));
 if isempty(initial_dropdown_value), initial_dropdown_value = 1; end
 msFramespecGramDropdownPos = [padL horiz_orig buttonWidth dropdownHeight];
 hdropdown.ms_framespec_gram = uicontrol(p.guidata.buttonPanel,'Style','popupmenu',...
@@ -467,7 +502,7 @@ last_sigproc_params.ms_framespec_gram = p.sigproc_params.ms_framespec_gram;
 if ~ischar(p.sigproc_params.ms_framespec_form)
     error('sorry: we only support named ms_framespecs right now');
 end
-initial_dropdown_value = strmatch(p.sigproc_params.ms_framespec_form,all_ms_framespecs.name);
+initial_dropdown_value = find(matches(all_ms_framespecs.name,p.sigproc_params.ms_framespec_form));
 if isempty(initial_dropdown_value), initial_dropdown_value = 1; end
 msFramespecFormDropdownPos = [padL horiz_orig buttonWidth dropdownHeight];
 hdropdown.ms_framespec_form = uicontrol(p.guidata.buttonPanel,'Style','popupmenu',...
@@ -496,7 +531,7 @@ last_sigproc_params.ms_framespec_form = p.sigproc_params.ms_framespec_form;
 % nlpc dropdown
 nchoices = length(p.sigproc_params.nlpc_choices);
 for ichoice = 1:nchoices
-    nlpc_choice_strs{ichoice} = sprintf('%d',p.sigproc_params.nlpc_choices(ichoice));
+    nlpc_choice_strs{ichoice} = sprintf('%d',p.sigproc_params.nlpc_choices(ichoice)); %#ok<*AGROW> 
 end
 initial_dropdown_value = find(p.sigproc_params.nlpc_choices == p.sigproc_params.nlpc);
 if isempty(initial_dropdown_value), initial_dropdown_value = 1; end
@@ -543,7 +578,7 @@ p.guidata.text_ampl_thresh4voicing = uicontrol(p.guidata.buttonPanel,'Style','te
 uistack(p.guidata.text_ampl_thresh4voicing,'bottom'); % move to bottom
 horiz_orig = horiz_orig + textHeight + padYBig;
     function set_edit_ampl_thresh4voicing(hObject,eventdata) % callback for hedit.ampl_thresh4voicing
-        set_ampl_thresh4voicing(str2num(get(hedit.ampl_thresh4voicing,'String')));
+        set_ampl_thresh4voicing(str2double(get(hedit.ampl_thresh4voicing,'String')));
     end
 
 last_sigproc_params.ampl_thresh4voicing = p.sigproc_params.ampl_thresh4voicing;
@@ -564,7 +599,7 @@ hbutton.toggle_formant = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',..
     'FontUnits','Normalized','FontSize',buttonFontSize,...
     'Callback',@toggle_formants);
 horiz_orig = horiz_orig + buttonHeight + padYButton;
-    function toggle_formants(hObject,eventdata) % callback for hbutton.calc
+    function toggle_formants(hObject,eventdata) % callback for hbutton.toggle_formant
         axinfo = get(gram_ax,'UserData');
         locF1 = find(gram_ax.Children == axinfo.hply(2));
         locF2 = find(gram_ax.Children == axinfo.hply(3));
@@ -588,7 +623,7 @@ hbutton.calc = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
     'Units','Normalized','Position',calcButtonPos,...
     'FontUnits','Normalized','FontSize',buttonFontSize,...
     'Callback',@calcFx);
-horiz_orig = horiz_orig + buttonHeight + padYButton;
+horiz_orig = horiz_orig + buttonHeight + padYButton; %#ok<NASGU> 
 normal_bgcolor = get(hbutton.calc,'BackgroundColor');
     function calcFx(hObject,eventdata) % callback for hbutton.calc
         update_ampl_ax(  ampl_ax,wave_ax,        p);
@@ -611,7 +646,7 @@ normal_bgcolor = get(hbutton.calc,'BackgroundColor');
 %% key press events
 marker_captured = 0;
 
-    function key_press_func(src,event)
+    function key_press_func(~,event)
         the_ax = cur_ax_from_curpt(ntAx,tAx);
         the_axinfo = get(the_ax,'UserData');
         if ~isempty(the_ax) && ~isempty(the_axinfo.h_tmarker_low)
@@ -641,8 +676,6 @@ marker_captured = 0;
                     unheighten_ax(the_ax);
                 case 'c' % shortcut for "continue" button
                     contprogram([],[]);
-                case 't' % CWN custom. shortcut for toggle show/hide formants
-                    toggle_formants;
                 otherwise
                     fprintf('len(%d)\n',length(event.Key));
                     fprintf('%d,',event.Key);
@@ -808,7 +841,7 @@ wave_axinfo = get(wave_ax,'UserData');
 gram_axinfo = get(gram_ax,'UserData');
 t_min = gram_axinfo.t_llim;
 t_max = gram_axinfo.t_hlim;
-t_range = t_max - t_min;
+% t_range = t_max - t_min;
 the_axdat = wave_axinfo.dat{1};
 hax = wave_axinfo.h;
 set_viewer_axlims(hax,t_min,t_max,the_axdat);
@@ -1039,7 +1072,7 @@ ampl_axinfo = get(ampl_ax,'UserData');
 fs = wave_axinfo.params{1}.fs;
 y = wave_axinfo.dat{1};
 
-hzbounds4plot = p.plot_params.hzbounds4plot;
+% hzbounds4plot = p.plot_params.hzbounds4plot;
 ms_framespec_gram = p.sigproc_params.ms_framespec_gram;
 ms_framespec_form = p.sigproc_params.ms_framespec_form;
 nfft = p.sigproc_params.nfft;
@@ -1194,7 +1227,7 @@ the_params.iframe = iframe_gram;
 the_params.taxis = faxis_gram';
 end
 
-function [the_axdat,the_params] = make_form_spec_axdat(ftrack,lpc_coeffs,frame_taxis_form,faxis_form,fs,t_spec)
+function [the_axdat,the_params] = make_form_spec_axdat(ftrack,~,frame_taxis_form,faxis_form,~,t_spec)
 
 iframe_form = dsearchn(frame_taxis_form',t_spec);
 form_frame_formants = ftrack(:,iframe_form);
@@ -1208,7 +1241,7 @@ the_params.formants = form_frame_formants;
 end
 
 function update_spec_plots(hax,hply,axdat,params)
-fig_params = get_fig_params;
+% fig_params = get_fig_params;
 
 min_axdat1 = min(axdat{1}); max_axdat1 = max(axdat{1});
 range_axdat1 = max_axdat1 - min_axdat1;
@@ -1219,10 +1252,11 @@ range_axdat2 = max_axdat2 - min_axdat2;
 norm_axdat{2} = (axdat{2} - min_axdat2)/range_axdat2;
 
 haxlims = axis(hax);
-t_min = haxlims(1); t_max = haxlims(2); t_range = t_max - t_min;
+t_min = haxlims(1); t_max = haxlims(2); 
+% t_range = t_max - t_min;
 dat4minmax = [norm_axdat{1} norm_axdat{2}];
 set_viewer_axlims(hax,t_min,t_max,dat4minmax);
-haxlims = axis(hax);
+% haxlims = axis(hax);
 set(hply(1),'YData',norm_axdat{1}); set(hply(1),'Color','b');
 % set(hply(2),'YData',norm_axdat{2}); set(hply(2),'Color','r');
 % formant = params{2}.formants;
@@ -1276,7 +1310,7 @@ switch axinfo.type
         
     case 'gram'
         absS = axdat{1};
-        gram_params = params{1};
+%         gram_params = params{1};
         absS2plot = 20*log10(absS+fig_params.wave_viewer_logshim);
         hply(1) = imagesc(taxis,faxis,absS2plot);
         set(hax,'YDir','normal');
@@ -1302,7 +1336,7 @@ switch axinfo.type
         for iformant = 1:nformants
             spec_marker_name(iformant).name = ' %.0f Hz ';
             spec_marker_name(iformant).vert_align = 'top';
-            spec_marker_name(iformant).idatsources = [2];
+            spec_marker_name(iformant).idatsources = 2;
             spec_marker_name(iformant).iidatsource4ypos = 1;
             spec_marker_name(iformant).idatrows = iformant;
             spec_marker_name(iformant).bgrect.color = 'same';
@@ -1319,7 +1353,7 @@ switch axinfo.type
         yes_add_user_events = 1;
         spec_marker_name.name = ' %.0f Hz ';
         spec_marker_name.vert_align = 'top';
-        spec_marker_name.idatsources = [1];
+        spec_marker_name.idatsources = 1;
         spec_marker_name.bgrect.color = 'same';
         
         hax.XTickLabel = [];
@@ -1333,7 +1367,7 @@ switch axinfo.type
         yes_add_user_events = 1;
         spec_marker_name.name = ' %.2f ';
         spec_marker_name.vert_align = 'top';
-        spec_marker_name.idatsources = [1];
+        spec_marker_name.idatsources = 1;
         spec_marker_name.bgrect.color = 'same';
     case 'spec'
         % first, do some dummy plotting to create the hlpy's
@@ -1401,7 +1435,8 @@ if yes_add_user_events && ~isempty(p.event_params.user_event_names)
     if length(p.event_params.user_event_times) ~= n_user_events, error('# of user_event_times(%d) ~= # of user_event names(%d)',length(p.event_params.user_event_times),n_user_events); end
     axinfo.p.event_params.user_event_times = p.event_params.user_event_times;
     for i_user_event = 1:n_user_events
-        h_tmarker_user_event(i_user_event) = make_tmarker(hax,'c-',p.event_params.user_event_names{i_user_event}); update_tmarker(h_tmarker_user_event(i_user_event),p.event_params.user_event_times(i_user_event));
+        h_tmarker_user_event(i_user_event) = make_tmarker(hax,'c-',p.event_params.user_event_names{i_user_event});
+        update_tmarker(h_tmarker_user_event(i_user_event),p.event_params.user_event_times(i_user_event));
     end
     axinfo.n_user_events = n_user_events;
     axinfo.h_tmarker_user_event = h_tmarker_user_event;
@@ -1503,11 +1538,6 @@ axinfo.i = i;
 set(ax,'UserData',axinfo);
 end
 
-function i = get_ax_i(ax)
-axinfo = get(ax,'UserData');
-i = axinfo.i;
-end
-
 function new_t_spec = incdec_t_spec(yes_inc,t_low,t_spec,t_hi,the_ax)
 the_axinfo = get(the_ax,'UserData');
 taxis = the_axinfo.taxis;
@@ -1521,15 +1551,15 @@ new_t_spec = taxis(itaxis);
 if new_t_spec < t_low || new_t_spec > t_hi, new_t_spec = (t_low + t_hi)/2; end
 end
 
-function [axtype,hax,hply,h_tmarker_low,h_tmarker_spec,h_tmarker_hi] = get_ax_info(ax)
-axinfo = get(ax,'UserData');
-axtype = axinfo.type;
-hax = axinfo.h;
-hply = axinfo.hply;
-h_tmarker_low = axinfo.h_tmarker_low;
-h_tmarker_spec = axinfo.h_tmarker_spec;
-h_tmarker_hi = axinfo.h_tmarker_hi;
-end
+% function [axtype,hax,hply,h_tmarker_low,h_tmarker_spec,h_tmarker_hi] = get_ax_info(ax)
+% axinfo = get(ax,'UserData');
+% axtype = axinfo.type;
+% hax = axinfo.h;
+% hply = axinfo.hply;
+% h_tmarker_low = axinfo.h_tmarker_low;
+% h_tmarker_spec = axinfo.h_tmarker_spec;
+% h_tmarker_hi = axinfo.h_tmarker_hi;
+% end
 
 function h_tmarker = make_tmarker(hax,linestyle,marker_name,line_width,yes_visible)
 fig_params = get_fig_params;
@@ -1563,7 +1593,7 @@ else
         marker_name_spec.h_tmarker = h_tmarker;
         marker_name_str = get_marker_name_str(marker_name_spec,t);
         cur_hax = gca;
-        axes(hax); % because the text() command only works with the current axes
+        axes(hax); %#ok<*LAXES> % because the text() command only works with the current axes 
         h_marker_name(i_marker_name) = text(t,tmarker_ydat(2),marker_name_str);
         axes(cur_hax);
         set(h_marker_name(i_marker_name),'VerticalAlignment',marker_name_spec.vert_align);
@@ -1634,7 +1664,7 @@ end
 for ii = 1:ndatsources
     switch idatsources(ii)
         case 0, datsources{ii} = t;
-        otherwise,
+        otherwise
             h_tmarker = marker_name_spec.h_tmarker;
             axinfo = get(get(h_tmarker,'Parent'),'UserData');
             the_dat = axinfo.dat{idatsources(ii)};
@@ -1709,7 +1739,7 @@ end
 n_user_events = axinfo.n_user_events;
 if n_user_events && ~isempty(t_user_events)
     h_tmarker_user_event = axinfo.h_tmarker_user_event;
-    user_event_times = axinfo.p.event_params.user_event_times;
+%     user_event_times = axinfo.p.event_params.user_event_times;
     for ievent = 1:n_user_events
         update_tmarker(h_tmarker_user_event(ievent),t_user_events(ievent));
     end
@@ -1721,7 +1751,7 @@ function ampl_thresh4voicing = get_ampl_thresh4voicing(the_ax,nax,ax)
 axinfo = get(the_ax,'UserData');
 if strcmp(axinfo.type,'ampl')
     ampl_ax = the_ax;
-    ampl_axinfo = axinfo;
+%     ampl_axinfo = axinfo;
     cp = get(ampl_ax,'CurrentPoint');
     ampl_thresh4voicing = cp(1,2);
 else
@@ -1865,7 +1895,7 @@ function h_captured_tmarker = capture_ax_tmarker(ax)
 axinfo = get(ax,'UserData');
 cp = get(ax,'CurrentPoint');
 t_pos = cp(1,1);
-[t_tmarker_low,t_tmarker_spec,t_tmarker_hi,t_tuser_events] = get_ax_tmarker_times(ax);
+[t_tmarker_low,t_tmarker_spec,t_tmarker_hi,t_tuser_events] = get_ax_tmarker_times(ax); %#ok<*ASGLU> 
 % absdiff_tmarker(1) = abs(t_pos - t_tmarker_low);
 % absdiff_tmarker(2) = abs(t_pos - t_tmarker_spec);
 % absdiff_tmarker(3)  = abs(t_pos - t_tmarker_hi);
@@ -1895,34 +1925,34 @@ end
 update_tmarker(h_captured_tmarker,t_pos);
 end
 
-function move_tmarker2ax_curpt(ax,h_tmarker);
+function move_tmarker2ax_curpt(ax,h_tmarker)
 cp = get(ax,'CurrentPoint');
 t_pos = cp(1,1);
 update_tmarker(h_tmarker,t_pos);
 end
 
-function output_interval_btw_ax_tmarkers(ax,fs);
-global yseg tseg yfs
-axinfo = get(ax,'UserData');
-taxis = get(axinfo.hply(1),'XData');
-y = get(axinfo.hply(1),'YData');
-[t_tmarker_low,t_tmarker_spec,t_tmarker_hi] = get_ax_tmarker_times(ax);
-[duh,ilow] = min(abs(taxis - t_tmarker_low));
-[duh,ihi]  = min(abs(taxis - t_tmarker_hi));
-yseg = y(ilow:ihi);
-tseg = taxis(ilow:ihi);
-yfs = fs;
-end
+% function output_interval_btw_ax_tmarkers(ax,fs)
+% global yseg tseg yfs
+% axinfo = get(ax,'UserData');
+% taxis = get(axinfo.hply(1),'XData');
+% y = get(axinfo.hply(1),'YData');
+% [t_tmarker_low,t_tmarker_spec,t_tmarker_hi] = get_ax_tmarker_times(ax);
+% [duh,ilow] = min(abs(taxis - t_tmarker_low));
+% [duh,ihi]  = min(abs(taxis - t_tmarker_hi));
+% yseg = y(ilow:ihi);
+% tseg = taxis(ilow:ihi);
+% yfs = fs;
+% end
 
-function report_interval_btw_ax_tmarkers(ax,fs);
-axinfo = get(ax,'UserData');
-taxis = get(axinfo.hply(1),'XData');
-[t_tmarker_low,t_tmarker_spec,t_tmarker_hi] = get_ax_tmarker_times(ax);
-[duh,ilow] = min(abs(taxis - t_tmarker_low));
-[duh,ihi]  = min(abs(taxis - t_tmarker_hi));
-fprintf('t_low(%.3f sec), t_hi(%.3f sec), dur(%.3f sec, %d samples)\n', ...
-    t_tmarker_low,t_tmarker_hi,t_tmarker_hi-t_tmarker_low,ihi-ilow+1);
-end
+% function report_interval_btw_ax_tmarkers(ax,fs)
+% axinfo = get(ax,'UserData');
+% taxis = get(axinfo.hply(1),'XData');
+% [t_tmarker_low,t_tmarker_spec,t_tmarker_hi] = get_ax_tmarker_times(ax);
+% [duh,ilow] = min(abs(taxis - t_tmarker_low));
+% [duh,ihi]  = min(abs(taxis - t_tmarker_hi));
+% fprintf('t_low(%.3f sec), t_hi(%.3f sec), dur(%.3f sec, %d samples)\n', ...
+%     t_tmarker_low,t_tmarker_hi,t_tmarker_hi-t_tmarker_low,ihi-ilow+1);
+% end
 
 function expand_btw_ax_tmarkers(ax,tAx,fAx)
 fig_params = get_fig_params;
@@ -1951,6 +1981,7 @@ end
 
 function expand_btw_ax_uev(ax,tAx,fAx) 
 [~,t_spec,~,t_user_events] = get_ax_tmarker_times(ax);
+
 fig_params = get_fig_params;
 if length(t_user_events) >= 2
     tmarker_buffer = 0.05;
@@ -1961,7 +1992,15 @@ elseif length(t_user_events) == 1
     t_low = t_user_events(1) - tmarker_buffer;
     t_hi = t_user_events(1) + tmarker_buffer;
 else
-    return;
+    % if no user events, find first and last time that formants are
+    % present, based on ampl. threshold
+    tmarker_buffer = 0.05;
+    tAx_info = get(tAx,'UserData');
+
+    f1_first = find(tAx_info{3}.dat{2}(1, :) > 0, 1, 'first');
+    f1_last  = find(tAx_info{3}.dat{2}(1, :) > 0, 1, 'last');
+    t_low = tAx_info{3}.params{2}.taxis(f1_first) - tmarker_buffer;
+    t_hi  = tAx_info{3}.params{2}.taxis(f1_last)  + tmarker_buffer;
 end
 
     %CWN 4/2020 -- The alignment checking in the next 19 lines could be
@@ -2151,7 +2190,7 @@ axinfo = get(ax,'UserData');
 update_tmarker(axinfo.h_tmarker_spec,[]);
 end
 
-function iax = get_iax(the_ax,ax,nax);
+function iax = get_iax(the_ax,ax,nax)
 iax_found = 0;
 for iax = 1:nax
     if ax(iax) == the_ax
