@@ -322,10 +322,6 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
         end
     end
 
-
-
-
-
 % clear events button
 clearEventsButtonPos = [padL horiz_orig buttonWidth buttonHeight];
 hbutton.clear_events = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
