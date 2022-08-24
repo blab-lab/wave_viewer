@@ -212,7 +212,7 @@ padYSmall = .002;
 horiz_orig = padYBig;
 
 buttonWidth = .9;
-buttonHeight = .045;
+buttonHeight = .05;
 buttonFontSize = .4;
 sliderHeight = .025;
 dropdownHeight = .03;
@@ -229,40 +229,6 @@ hbutton.calc = [];      % not sure why these are set: could be
 normal_bgcolor = [];    % in case calcFx is somehow called by another
 alert4calcFx = 0;       % function before the calc button is created
 
-% jump-to trial text box and button
-jumptoTrialTextBox = [padL horiz_orig buttonWidth/2 buttonHeight];
-hbutton.jumptoTrialBox = uicontrol(p.guidata.buttonPanel,'Style','edit',...
-    'String', num2str(hf.Name(7:end-1)), 'Units', 'Normalized', 'Position', jumptoTrialTextBox, ...
-    'FontUnits', 'Normalized', 'FontSize', buttonFontSize, ...
-    'Callback', @check4validTrialNum);
-    function check4validTrialNum(hObject,eventdata) %#ok<*INUSD> 
-        %validate positive numbers
-        newTrialNum = str2double(hbutton.jumptoTrialBox.String);
-        if newTrialNum < 1
-            newTrialNum = 1;
-        end
-        if isnan(newTrialNum) % reset back to current trial if can't convert to double
-            newTrialNum = hf.Name(7:end-1); 
-        end
-        % Can't validate upper limit of trial num here. wave_viewer doesn't know how many trial there are.
-        % That validation happens in audioGUI.m
-        set(hbutton.jumptoTrialBox, 'String', num2str(newTrialNum));
-    end
-
-jumptoTrialButton = [padL+(buttonWidth/2) horiz_orig buttonWidth/2 buttonHeight];
-hbutton.jumptoTrialButton = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
-    'String', 'jump', 'Units', 'Normalized', 'Position', jumptoTrialButton, ...
-    'FontUnits', 'Normalized', 'FontSize', buttonFontSize, ...
-    'Callback', @jumptoProgram);
-horiz_orig = horiz_orig + buttonHeight + padYButton; % increment horiz_orig only after text box AND button
-    function jumptoProgram(hObject,eventdata) % callback for h_button_jumptoTrialButton
-        if check4alert4calcFx('jumping')
-            viewer_end_state.name = 'jump';
-            viewer_end_state.jumpto_trial = str2double(hbutton.jumptoTrialBox.String);
-            delete(hf);
-        end
-    end
-
 
 % help button
 helpButtonPos = [padL horiz_orig buttonWidth buttonHeight];
@@ -272,7 +238,7 @@ hbutton.help = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
     'FontUnits','Normalized','FontSize',buttonFontSize,...
     'Callback',@my_help_func);
 horiz_orig = horiz_orig + buttonHeight + padYButton;
-    function my_help_func(hObject,eventdata) % callback for help button
+    function my_help_func(hObject,eventdata) %#ok<*INUSD>   % callback for help button
         helpstr = sprintf(['keyboard shortcuts:\n', ...
             '"v": if ampl_ax, set amplitude threshold for voicing (i.e., valid formants)\n', ...
             '"a": add a user event\n', ...
@@ -315,8 +281,23 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
         end
     end
 
+% previous button
+prevButtonPos = [padL horiz_orig buttonWidth/3 buttonHeight];
+hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
+    'String','previous',...
+    'Units','Normalized','Position',prevButtonPos,...
+    'FontUnits','Normalized','FontSize',buttonFontSize*2/3,...
+    'Callback',@prevprogram);
+% no change in horiz_orig, since "previous" button is in-line with "continue" button
+    function prevprogram(hObject,eventdata) % callback for h_button_contprogram
+        if check4alert4calcFx('going to previous trial')
+            viewer_end_state.name = 'previous';
+            delete(hf);
+        end
+    end
+
 % continue button
-contButtonPos = [padL horiz_orig buttonWidth buttonHeight];
+contButtonPos = [padL+buttonWidth*1/3 horiz_orig buttonWidth*2/3 buttonHeight];
 hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
     'String','continue',...
     'Units','Normalized','Position',contButtonPos,...
@@ -340,6 +321,10 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
             end
         end
     end
+
+
+
+
 
 % clear events button
 clearEventsButtonPos = [padL horiz_orig buttonWidth buttonHeight];
