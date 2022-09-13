@@ -4,7 +4,7 @@ function viewer_end_state = wave_viewer(y,varargin)
 %   VIEWER_END_STATE is provided, wave_viewer() will start blocked, otherwise command prompt is returned
 
 yes_profile = 0;
-if yes_profile, profile on; end %#ok<*UNRCH> 
+if yes_profile, profile on; end
 
 %% param defaults
 
@@ -238,7 +238,7 @@ hbutton.help = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
     'FontUnits','Normalized','FontSize',buttonFontSize,...
     'Callback',@my_help_func);
 horiz_orig = horiz_orig + buttonHeight + padYButton;
-    function my_help_func(hObject,eventdata) %#ok<*INUSD>   % callback for help button
+    function my_help_func(hObject,eventdata)   % callback for help button
         helpstr = sprintf(['keyboard shortcuts:\n', ...
             '"v": if ampl_ax, set amplitude threshold for voicing (i.e., valid formants)\n', ...
             '"a": add a user event\n', ...
@@ -423,7 +423,7 @@ hslider.max_gray = uicontrol(p.guidata.buttonPanel,'Style','slider',...
     'Min',0,'Max',1,'SliderStep', [0.01 0.1],...
     'Value',p.plot_params.max_gray, ...
     'Units','Normalized','Position',maxGraySliderPos,...
-    'Callback',@set_max_gray); %#ok<STRNU> 
+    'Callback',@set_max_gray);
 horiz_orig = horiz_orig + sliderHeight + padYSmall;
 
 % gram color: text
@@ -604,7 +604,7 @@ hbutton.calc = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
     'Units','Normalized','Position',calcButtonPos,...
     'FontUnits','Normalized','FontSize',buttonFontSize,...
     'Callback',@calcFx);
-horiz_orig = horiz_orig + buttonHeight + padYButton; %#ok<NASGU> 
+horiz_orig = horiz_orig + buttonHeight + padYButton;
 normal_bgcolor = get(hbutton.calc,'BackgroundColor');
     function calcFx(hObject,eventdata) % callback for hbutton.calc
         update_ampl_ax(  ampl_ax,wave_ax,        p);
@@ -627,7 +627,7 @@ normal_bgcolor = get(hbutton.calc,'BackgroundColor');
 %% key press events
 marker_captured = 0;
 
-    function key_press_func(~,event)
+    function key_press_func(src,event)
         the_ax = cur_ax_from_curpt(ntAx,tAx);
         the_axinfo = get(the_ax,'UserData');
         if ~isempty(the_ax) && ~isempty(the_axinfo.h_tmarker_low)
@@ -822,7 +822,6 @@ wave_axinfo = get(wave_ax,'UserData');
 gram_axinfo = get(gram_ax,'UserData');
 t_min = gram_axinfo.t_llim;
 t_max = gram_axinfo.t_hlim;
-% t_range = t_max - t_min;
 the_axdat = wave_axinfo.dat{1};
 hax = wave_axinfo.h;
 set_viewer_axlims(hax,t_min,t_max,the_axdat);
@@ -1053,7 +1052,6 @@ ampl_axinfo = get(ampl_ax,'UserData');
 fs = wave_axinfo.params{1}.fs;
 y = wave_axinfo.dat{1};
 
-% hzbounds4plot = p.plot_params.hzbounds4plot;
 ms_framespec_gram = p.sigproc_params.ms_framespec_gram;
 ms_framespec_form = p.sigproc_params.ms_framespec_form;
 nfft = p.sigproc_params.nfft;
@@ -1208,7 +1206,7 @@ the_params.iframe = iframe_gram;
 the_params.taxis = faxis_gram';
 end
 
-function [the_axdat,the_params] = make_form_spec_axdat(ftrack,~,frame_taxis_form,faxis_form,~,t_spec)
+function [the_axdat,the_params] = make_form_spec_axdat(ftrack,lpc_coeffs,frame_taxis_form,faxis_form,fs,t_spec)
 
 iframe_form = dsearchn(frame_taxis_form',t_spec);
 form_frame_formants = ftrack(:,iframe_form);
@@ -1222,7 +1220,7 @@ the_params.formants = form_frame_formants;
 end
 
 function update_spec_plots(hax,hply,axdat,params)
-% fig_params = get_fig_params;
+fig_params = get_fig_params;
 
 min_axdat1 = min(axdat{1}); max_axdat1 = max(axdat{1});
 range_axdat1 = max_axdat1 - min_axdat1;
@@ -1234,10 +1232,8 @@ norm_axdat{2} = (axdat{2} - min_axdat2)/range_axdat2;
 
 haxlims = axis(hax);
 t_min = haxlims(1); t_max = haxlims(2); 
-% t_range = t_max - t_min;
 dat4minmax = [norm_axdat{1} norm_axdat{2}];
 set_viewer_axlims(hax,t_min,t_max,dat4minmax);
-% haxlims = axis(hax);
 set(hply(1),'YData',norm_axdat{1}); set(hply(1),'Color','b');
 % set(hply(2),'YData',norm_axdat{2}); set(hply(2),'Color','r');
 % formant = params{2}.formants;
@@ -1291,7 +1287,7 @@ switch axinfo.type
         
     case 'gram'
         absS = axdat{1};
-%         gram_params = params{1};
+        gram_params = params{1};
         absS2plot = 20*log10(absS+fig_params.wave_viewer_logshim);
         hply(1) = imagesc(taxis,faxis,absS2plot);
         set(hax,'YDir','normal');
@@ -1532,16 +1528,6 @@ new_t_spec = taxis(itaxis);
 if new_t_spec < t_low || new_t_spec > t_hi, new_t_spec = (t_low + t_hi)/2; end
 end
 
-% function [axtype,hax,hply,h_tmarker_low,h_tmarker_spec,h_tmarker_hi] = get_ax_info(ax)
-% axinfo = get(ax,'UserData');
-% axtype = axinfo.type;
-% hax = axinfo.h;
-% hply = axinfo.hply;
-% h_tmarker_low = axinfo.h_tmarker_low;
-% h_tmarker_spec = axinfo.h_tmarker_spec;
-% h_tmarker_hi = axinfo.h_tmarker_hi;
-% end
-
 function h_tmarker = make_tmarker(hax,linestyle,marker_name,line_width,yes_visible)
 fig_params = get_fig_params;
 if nargin < 3, marker_name = []; end
@@ -1574,7 +1560,7 @@ else
         marker_name_spec.h_tmarker = h_tmarker;
         marker_name_str = get_marker_name_str(marker_name_spec,t);
         cur_hax = gca;
-        axes(hax); %#ok<*LAXES> % because the text() command only works with the current axes 
+        axes(hax);  % because the text() command only works with the current axes 
         h_marker_name(i_marker_name) = text(t,tmarker_ydat(2),marker_name_str);
         axes(cur_hax);
         set(h_marker_name(i_marker_name),'VerticalAlignment',marker_name_spec.vert_align);
@@ -1720,7 +1706,7 @@ end
 n_user_events = axinfo.n_user_events;
 if n_user_events && ~isempty(t_user_events)
     h_tmarker_user_event = axinfo.h_tmarker_user_event;
-%     user_event_times = axinfo.p.event_params.user_event_times;
+    user_event_times = axinfo.p.event_params.user_event_times;
     for ievent = 1:n_user_events
         update_tmarker(h_tmarker_user_event(ievent),t_user_events(ievent));
     end
@@ -1732,7 +1718,6 @@ function ampl_thresh4voicing = get_ampl_thresh4voicing(the_ax,nax,ax)
 axinfo = get(the_ax,'UserData');
 if strcmp(axinfo.type,'ampl')
     ampl_ax = the_ax;
-%     ampl_axinfo = axinfo;
     cp = get(ampl_ax,'CurrentPoint');
     ampl_thresh4voicing = cp(1,2);
 else
@@ -1876,7 +1861,7 @@ function h_captured_tmarker = capture_ax_tmarker(ax)
 axinfo = get(ax,'UserData');
 cp = get(ax,'CurrentPoint');
 t_pos = cp(1,1);
-[t_tmarker_low,t_tmarker_spec,t_tmarker_hi,t_tuser_events] = get_ax_tmarker_times(ax); %#ok<*ASGLU> 
+[t_tmarker_low,t_tmarker_spec,t_tmarker_hi,t_tuser_events] = get_ax_tmarker_times(ax); 
 % absdiff_tmarker(1) = abs(t_pos - t_tmarker_low);
 % absdiff_tmarker(2) = abs(t_pos - t_tmarker_spec);
 % absdiff_tmarker(3)  = abs(t_pos - t_tmarker_hi);
@@ -1912,28 +1897,28 @@ t_pos = cp(1,1);
 update_tmarker(h_tmarker,t_pos);
 end
 
-% function output_interval_btw_ax_tmarkers(ax,fs)
-% global yseg tseg yfs
-% axinfo = get(ax,'UserData');
-% taxis = get(axinfo.hply(1),'XData');
-% y = get(axinfo.hply(1),'YData');
-% [t_tmarker_low,t_tmarker_spec,t_tmarker_hi] = get_ax_tmarker_times(ax);
-% [duh,ilow] = min(abs(taxis - t_tmarker_low));
-% [duh,ihi]  = min(abs(taxis - t_tmarker_hi));
-% yseg = y(ilow:ihi);
-% tseg = taxis(ilow:ihi);
-% yfs = fs;
-% end
+function output_interval_btw_ax_tmarkers(ax,fs)
+global yseg tseg yfs
+axinfo = get(ax,'UserData');
+taxis = get(axinfo.hply(1),'XData');
+y = get(axinfo.hply(1),'YData');
+[t_tmarker_low,t_tmarker_spec,t_tmarker_hi] = get_ax_tmarker_times(ax);
+[duh,ilow] = min(abs(taxis - t_tmarker_low));
+[duh,ihi]  = min(abs(taxis - t_tmarker_hi));
+yseg = y(ilow:ihi);
+tseg = taxis(ilow:ihi);
+yfs = fs;
+end
 
-% function report_interval_btw_ax_tmarkers(ax,fs)
-% axinfo = get(ax,'UserData');
-% taxis = get(axinfo.hply(1),'XData');
-% [t_tmarker_low,t_tmarker_spec,t_tmarker_hi] = get_ax_tmarker_times(ax);
-% [duh,ilow] = min(abs(taxis - t_tmarker_low));
-% [duh,ihi]  = min(abs(taxis - t_tmarker_hi));
-% fprintf('t_low(%.3f sec), t_hi(%.3f sec), dur(%.3f sec, %d samples)\n', ...
-%     t_tmarker_low,t_tmarker_hi,t_tmarker_hi-t_tmarker_low,ihi-ilow+1);
-% end
+function report_interval_btw_ax_tmarkers(ax,fs)
+axinfo = get(ax,'UserData');
+taxis = get(axinfo.hply(1),'XData');
+[t_tmarker_low,t_tmarker_spec,t_tmarker_hi] = get_ax_tmarker_times(ax);
+[duh,ilow] = min(abs(taxis - t_tmarker_low));
+[duh,ihi]  = min(abs(taxis - t_tmarker_hi));
+fprintf('t_low(%.3f sec), t_hi(%.3f sec), dur(%.3f sec, %d samples)\n', ...
+    t_tmarker_low,t_tmarker_hi,t_tmarker_hi-t_tmarker_low,ihi-ilow+1);
+end
 
 function expand_btw_ax_tmarkers(ax,tAx,fAx)
 fig_params = get_fig_params;
