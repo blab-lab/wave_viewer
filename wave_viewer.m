@@ -1043,7 +1043,7 @@ axinfo = new_axinfo('gram',params{1}.taxis,params{1}.faxis,axdat,gram_ax,hzbound
 set(gram_ax,'UserData',axinfo);
 
 % hide formants
-if ~p.plot_params.show_formants
+if isfield(p.plot_params,'yes_show_formants') && ~p.plot_params.yes_show_formants
     locF1 = find(gram_ax.Children == axinfo.hply(2));
     locF2 = find(gram_ax.Children == axinfo.hply(3));
     set(gram_ax.Children(locF1),'Visible','off')
@@ -2201,7 +2201,7 @@ plot_params.axfracts = [];
 plot_params.yes_gray = 1;
 plot_params.thresh_gray = 0;
 plot_params.max_gray = 1;
-plot_params.show_formants = 1;
+plot_params.yes_show_formants = 1;
 fig_params = get_fig_params;
 plot_params.figpos = fig_params.figpos_default;
 end
