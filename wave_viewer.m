@@ -1041,6 +1041,16 @@ end
 gram_ax = axes(p.guidata.taxesPanel);
 axinfo = new_axinfo('gram',params{1}.taxis,params{1}.faxis,axdat,gram_ax,hzbounds4plot,wave_axinfo.name,params{1}.taxis(1),params{1}.taxis(end),params,wave_axinfo.p);
 set(gram_ax,'UserData',axinfo);
+
+% hide formants
+if isfield(p.plot_params,'yes_show_formants') && ~p.plot_params.yes_show_formants
+    locF1 = find(gram_ax.Children == axinfo.hply(2));
+    locF2 = find(gram_ax.Children == axinfo.hply(3));
+    set(gram_ax.Children(locF1),'Visible','off')
+    set(axinfo.hply(2),'Visible','off')
+    set(gram_ax.Children(locF2),'Visible','off')
+    set(axinfo.hply(3),'Visible','off')
+end
 end
 
 function update_gram_ax(gram_ax,wave_ax,ampl_ax,p)
@@ -2191,6 +2201,7 @@ plot_params.axfracts = [];
 plot_params.yes_gray = 1;
 plot_params.thresh_gray = 0;
 plot_params.max_gray = 1;
+plot_params.yes_show_formants = 1;
 fig_params = get_fig_params;
 plot_params.figpos = fig_params.figpos_default;
 end
