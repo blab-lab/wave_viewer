@@ -323,8 +323,75 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
         end
     end
 
+
+%%
+% edit events button
+editEventsButtonPos = [padL horiz_orig buttonWidth/3 buttonHeight];
+hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
+    'String','edit events',...
+    'Units','Normalized','Position',editEventsButtonPos,...
+    'FontUnits','Normalized','FontSize',buttonFontSize*1/2,...
+    'Callback',@edit_events);
+% no change in horiz_orig, since "previous" button is in-line with "continue" button
+    function edit_events(hObject,eventdata) % callback for h_button_edit_events
+        % get current user events
+        axinfo = get(tAx(1), 'UserData');
+        times = axinfo.p.event_params.user_event_times;
+        names = axinfo.p.event_params.user_event_names;
+
+        if length(names) < 1 || length(times) < 1
+            return;
+        end
+        if length(names) ~= length(times)
+            warning('Mismatch between number of names and times in trialparams.event_params.user_event_times/names. Can''t edit.');
+            return;
+        end
+
+        % display list of events
+        names_and_times = cell(1, length(names));
+        for i = 1:length(names)
+            names_and_times{i} = sprintf('%s @ %.3f', names{i}, times(i));
+        end
+        [listIx, bSelectionMade] = listdlg('PromptString', {'Pick ONE user event', 'you want to change.'}, ...
+            'ListString', names_and_times);
+
+        % update user events if exactly one event selected from list
+        if bSelectionMade && length(listIx) == 1
+            dlgTitle = 'Rename event';
+            dlgPrompt = {sprintf('New name for %s:', names{listIx})};
+            dlgDims = [1 40];
+            newName = inputdlg(dlgPrompt, dlgTitle, dlgDims);
+
+            if isempty(newName)
+                return;
+            end
+
+            names{listIx} = newName{1};
+
+            for iax = 1:ntAx
+                axinfo = get(tAx(iax),'UserData');
+                if axinfo.yes_add_user_events
+                    h_tmarker_user_event = axinfo.h_tmarker_user_event;
+                    axinfo.p.event_params.user_event_names = names;
+
+                    h_marker_name = get(h_tmarker_user_event(listIx), 'UserData');
+                    set(h_marker_name, 'String', newName{1})
+
+                    h_tmarker_user_event(listIx).UserData.UserData.name = newName{1};
+                    
+                    axinfo.h_tmarker_user_event = h_tmarker_user_event;
+                    set(tAx(iax),'UserData',axinfo);
+                end
+            end
+        end
+    end
+
+
+
+
+
 % clear events button
-clearEventsButtonPos = [padL horiz_orig buttonWidth buttonHeight];
+clearEventsButtonPos = [padL+buttonWidth*1/3 horiz_orig buttonWidth*2/3 buttonHeight];
 hbutton.clear_events = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
     'String','clear events',...
     'Units','Normalized','Position',clearEventsButtonPos,...
