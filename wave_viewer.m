@@ -362,6 +362,10 @@ hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
         times = axinfo.p.event_params.user_event_times;
         names = axinfo.p.event_params.user_event_names;
 
+        [~, sortOrder] = sort(times(:));
+        times_sorted = times(sortOrder);
+        names_sorted = names(sortOrder);
+
         if length(names) ~= length(times)
             warning('Mismatch between number of names and times in trialparams.event_params.user_event_times/names. Can''t edit.');
             return;
@@ -370,12 +374,10 @@ hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
             return;
         end
 
-        % TODO display names and times in order.
-
         % display list of events
         names_and_times = cell(1, length(names));
         for i = 1:length(names)
-            names_and_times{i} = sprintf('%s @ %.3f', names{i}, times(i));
+            names_and_times{i} = sprintf('%s @ %.3f', names_sorted{i}, times_sorted(i));
         end
         [listIx, bSelectionMade] = listdlg('PromptString', {'Pick ONE user event', 'you want to change.'}, ...
             'ListString', names_and_times);
@@ -383,7 +385,7 @@ hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
         % update user events if exactly one event selected from list
         if bSelectionMade && length(listIx) == 1
             dlgTitle = 'Rename event';
-            dlgPrompt = {sprintf('New name for %s:', names{listIx})};
+            dlgPrompt = {sprintf('New name for %s:', names_sorted{listIx})};
             dlgDims = [1 40];
             newName = inputdlg(dlgPrompt, dlgTitle, dlgDims);
 
@@ -391,7 +393,7 @@ hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
                 return;
             end
 
-            names{listIx} = newName{1};
+            names{sortOrder(listIx)} = newName{1};
 
             for iax = 1:ntAx
                 axinfo = get(tAx(iax),'UserData');
@@ -399,10 +401,10 @@ hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
                     h_tmarker_user_event = axinfo.h_tmarker_user_event;
                     axinfo.p.event_params.user_event_names = names;
 
-                    h_marker_name = get(h_tmarker_user_event(listIx), 'UserData');
+                    h_marker_name = get(h_tmarker_user_event(sortOrder(listIx)), 'UserData');
                     set(h_marker_name, 'String', newName{1})
 
-                    h_tmarker_user_event(listIx).UserData.UserData.name = newName{1};
+                    h_tmarker_user_event(sortOrder(listIx)).UserData.UserData.name = newName{1};
                     
                     axinfo.h_tmarker_user_event = h_tmarker_user_event;
                     set(tAx(iax),'UserData',axinfo);
