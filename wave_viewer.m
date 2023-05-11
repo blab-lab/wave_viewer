@@ -276,6 +276,7 @@ hbutton.end = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
     'Callback',@endprogram);
 horiz_orig = horiz_orig + buttonHeight + padYButton;
     function endprogram(hObject,eventdata) % callback for h_button_endprogram
+        reorderUserEvents();
         if check4alert4calcFx('ending')
             viewer_end_state.name = 'end';
             delete(hf);
@@ -291,6 +292,7 @@ hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
     'Callback',@prevprogram);
 % no change in horiz_orig, since "previous" button is in-line with "continue" button
     function prevprogram(hObject,eventdata) % callback for h_button_contprogram
+        reorderUserEvents();
         if check4alert4calcFx('going to previous trial')
             viewer_end_state.name = 'previous';
             delete(hf);
@@ -306,6 +308,7 @@ hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
     'Callback',@contprogram);
 horiz_orig = horiz_orig + buttonHeight + padYButton;
     function contprogram(hObject,eventdata) % callback for h_button_contprogram
+        reorderUserEvents();
         if check4alert4calcFx('continuing')
             viewer_end_state.name = 'cont';
             delete(hf);
@@ -319,6 +322,26 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
                 case 'Yes',  calcFx([],[]), yes_end = 1;
                 case 'No', yes_end = 1;
                 case 'Cancel', yes_end = 0;
+            end
+        end
+    end
+    function reorderUserEvents()
+        for iax = 1:ntAx
+            axinfo = get(tAx(iax),'UserData');
+
+            if iax == 1 % only need to get this once
+                times = axinfo.p.event_params.user_event_times;
+                names = axinfo.p.event_params.user_event_names;
+
+                [~, sortOrder] = sort(times(:));
+                times_sorted = times(sortOrder);
+                names_sorted = names(sortOrder);
+            end
+
+            if axinfo.yes_add_user_events
+                axinfo.p.event_params.user_event_names = names_sorted;
+                axinfo.p.event_params.user_event_times = times_sorted;
+                set(tAx(iax),'UserData',axinfo);
             end
         end
     end
@@ -339,13 +362,15 @@ hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
         times = axinfo.p.event_params.user_event_times;
         names = axinfo.p.event_params.user_event_names;
 
-        if length(names) < 1 || length(times) < 1
-            return;
-        end
         if length(names) ~= length(times)
             warning('Mismatch between number of names and times in trialparams.event_params.user_event_times/names. Can''t edit.');
             return;
         end
+        if length(names) < 1
+            return;
+        end
+
+        % TODO display names and times in order.
 
         % display list of events
         names_and_times = cell(1, length(names));
