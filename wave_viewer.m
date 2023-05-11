@@ -1855,7 +1855,12 @@ if axinfo.yes_add_user_events
             end
             user_event_names{n_user_events} = user_event_name;
             user_event_times(n_user_events) = t;
-            h_tmarker_user_event(n_user_events) = make_tmarker(ax(iax),'c-',user_event_names{n_user_events}); update_tmarker(h_tmarker_user_event(n_user_events),t);
+            if isempty(h_tmarker_user_event)
+                h_tmarker_user_event = make_tmarker(ax(iax),'c-',user_event_names{n_user_events});
+            else
+                h_tmarker_user_event(n_user_events) = make_tmarker(ax(iax),'c-',user_event_names{n_user_events});
+            end
+            update_tmarker(h_tmarker_user_event(n_user_events),t);
             move2front(ax(iax),axinfo.h_tmarker_spec);
             
             axinfo.n_user_events = n_user_events;
