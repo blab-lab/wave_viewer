@@ -323,12 +323,83 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
         end
     end
 
+
+%%
+% edit events button
+editEventsButtonPos = [padL horiz_orig buttonWidth/2 buttonHeight];
+hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
+    'String','<html><center>rename<br>events</center></html>',...
+    'Units','Normalized','Position',editEventsButtonPos,...
+    'FontUnits','Normalized','FontSize',buttonFontSize*0.75,...
+    'Callback',@edit_events);
+% no change in horiz_orig, since "previous" button is in-line with "continue" button
+    function edit_events(hObject,eventdata) % callback for h_button_edit_events
+        % get current user events
+        axinfo = get(tAx(1), 'UserData');
+        times = axinfo.p.event_params.user_event_times;
+        names = axinfo.p.event_params.user_event_names;
+
+        [~, sortOrder] = sort(times(:));
+        times_sorted = times(sortOrder);
+        names_sorted = names(sortOrder);
+
+        if length(names) ~= length(times)
+            warning('Mismatch between number of names and times in trialparams.event_params.user_event_times/names. Can''t edit.');
+            return;
+        end
+        if length(names) < 1
+            return;
+        end
+
+        % display list of events
+        names_and_times = cell(1, length(names));
+        for i = 1:length(names)
+            names_and_times{i} = sprintf('%.3f sec: %s', times_sorted(i), names_sorted{i});
+        end
+        [listIx, bSelectionMade] = listdlg('PromptString', 'Pick an event to rename.', ...
+            'ListString', names_and_times, 'selectionMode', 'single');
+
+        % update user events if exactly one event selected from list
+        if bSelectionMade && length(listIx) == 1
+            dlgTitle = 'Rename event';
+            dlgPrompt = {sprintf('New name for %s:', names_sorted{listIx})};
+            dlgDims = [1 40];
+            newName = inputdlg(dlgPrompt, dlgTitle, dlgDims);
+
+            if isempty(newName)
+                return;
+            end
+
+            names{sortOrder(listIx)} = newName{1};
+
+            for iax = 1:ntAx
+                axinfo = get(tAx(iax),'UserData');
+                if axinfo.yes_add_user_events
+                    h_tmarker_user_event = axinfo.h_tmarker_user_event;
+                    axinfo.p.event_params.user_event_names = names;
+
+                    h_marker_name = get(h_tmarker_user_event(sortOrder(listIx)), 'UserData');
+                    set(h_marker_name, 'String', newName{1})
+
+                    h_tmarker_user_event(sortOrder(listIx)).UserData.UserData.name = newName{1};
+                    
+                    axinfo.h_tmarker_user_event = h_tmarker_user_event;
+                    set(tAx(iax),'UserData',axinfo);
+                end
+            end
+        end
+    end
+
+
+
+
+
 % clear events button
-clearEventsButtonPos = [padL horiz_orig buttonWidth buttonHeight];
+clearEventsButtonPos = [padL+buttonWidth*1/2 horiz_orig buttonWidth*1/2 buttonHeight];
 hbutton.clear_events = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
-    'String','clear events',...
+    'String','<html><center>clear<br>events</center></html>',...
     'Units','Normalized','Position',clearEventsButtonPos,...
-    'FontUnits','Normalized','FontSize',buttonFontSize,...
+    'FontUnits','Normalized','FontSize',buttonFontSize*0.75,...
     'Callback',@clear_events);
 horiz_orig = horiz_orig + buttonHeight + padYButton;
     function clear_events(hObject,eventdata) % callback for h_button_clear_events
