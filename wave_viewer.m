@@ -1054,8 +1054,12 @@ update_tmarker(pitch_axinfo.h_tmarker_hi,[]);
 set(pitch_ax,'UserData',pitch_axinfo);
 end
 
-function [the_axdat,the_params] = make_pitch_axdat(y,fs,pitchlimits,thresh4voicing_spec)
-[ypitch,window_size,frame_step,nframes] = get_sig_pitch(y,fs,pitchlimits);
+function [the_axdat,the_params] = make_pitch_axdat(y,fs,pitchlimits,thresh4voicing_spec,ptrack_method)
+if strcmp(ptrack_method, 'praat')
+    [ypitch] = get_pitch_tracks(y,fs,p.sigproc_params);
+else
+    [ypitch,window_size,frame_step,nframes] = get_sig_pitch(y,fs,pitchlimits);
+end
 len_ypitch = length(ypitch);
 pitch_taxis = (0:(len_ypitch-1))/fs;
 ampl4pitch = interp1(thresh4voicing_spec.ampl_taxis,thresh4voicing_spec.ampl,pitch_taxis);
