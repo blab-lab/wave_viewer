@@ -6,6 +6,7 @@
 # 2023-10 Chris Naber v1
 
 #Inputs
+# also stored in free-speech\speech\get_sigproc_defaults.m and wave_viewer.m\get_sigproc_params
 form Measure pitch values for segments in a textgrid
     sentence directory_name: /Users/Public/Documents/software/wave_viewer
     sentence file_name_input: temp_wav

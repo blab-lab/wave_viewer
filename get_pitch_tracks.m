@@ -1,5 +1,6 @@
 function [ptrack_out,ptrack_mstaxis] = get_pitch_tracks(y,fs,params)
-% TODO add header
+% TODO Get rid of this once get_sig_pitch is fully set up to take
+% switch/case inputs based on sigproc_params.ptrack_method
 
 if nargin < 2
     fs = 11025;
