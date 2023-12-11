@@ -58,35 +58,18 @@ switch params.ptrack_method
             error('Something went wrong in Praat analysis')
         end
 
-        % clean up praat output text file to eliminate uniterpretable characters
-        A = regexp( fileread('temp_wav_pitch.txt'), '\n', 'split');
-        headers = strsplit(A{1},'\t');
-        if length(headers) == 1 %for some reason Praat sometimes uses a space to separate headers
-            headers = strsplit(A{1},' ');
-        end
-        for i = 1:length(headers)
-            curTxt = headers{i};
-            startUnits = strfind(curTxt,'(');
-            if ~isempty(startUnits)
-                curTxt = curTxt(1:startUnits-1);
-                headers{i} = curTxt;
-            end
-        end
-        A{1} = strjoin(headers,'\t');
-        fid = fopen('temp_wav_pitch.txt','w');
-        fprintf(fid, '%s\n', A{:});
-        fclose(fid);
+        % load pitch track from file written by Praat 
+        ptrack_table = readtable('temp_wav_pitch.txt', 'Delimiter', ',', 'TreatAsMissing', '--undefined--');
 
-        % load pitch track from file written by Praat and put in 'pitch' output
-        ptrack_out = readtable('temp_wav_pitch.txt','Delimiter','\t');
-        ptrack_mstaxis = ptrack_out.time' *  1000; %covert from s to ms
+        % put in 'pitch' output
+        pitchsig = round(ptrack_table.pitch', 2); % TODO decide if we want to keep pitch as floats or to reduce down        
         if nargout <= 2
-            varargout{1} = ptrack_mstaxis;
+            varargout{1} = round(ptrack_table.time', 5) *  1000; %convert s->ms; round to 100s place of ms, which is praat's actual precision
         end
 
         % clean up by deleting files that were created and return to previous
         % directory
-        delete temp_wav.wav temp_wav_pitch.txt %temp_wav_lpc.txt
+        delete temp_wav.wav temp_wav_pitch.txt
         cd(curr_dir)
     
 
