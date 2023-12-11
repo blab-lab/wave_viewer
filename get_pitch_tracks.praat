@@ -23,8 +23,24 @@ wav_name$ = file_name_input$ + ".wav"
 Read from file... 'directory_name$'/'wav_name$'
 soundID1$ = selected$("Sound")
 
-# TODO CWN put in the real code below
+######### TODO CWN put in the real code below
 
+writeFileLine: "C:/Users/cwnaber/Desktop/pitch_list.txt", "time,pitch"
+selectObject: 1
+To Pitch (ac): 0, min_pitch, 15, "no", 0.03, 0.45, 0.01, 0.35, 0.14, 600
+#To Pitch: 0, 75, 600
+no_of_frames = Get number of frames
+for frame from 1 to no_of_frames
+    time = Get time from frame number: frame
+    pitch = Get value in frame: frame, "Hertz"
+# TODO use real filepath
+    appendFileLine: "C:/Users/cwnaber/Desktop/pitch_list.txt", "'time','pitch'"
+endfor
+
+
+
+
+###################
 #extract formants
 To Formant (burg)... 'time_step' 'number_of_formants' 'maximum_formant' 'window_size' 'preemphasis'
 
