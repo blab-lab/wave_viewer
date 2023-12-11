@@ -36,7 +36,7 @@ switch params.ptrack_method
         % execute Praat script using params
         %must be in git repo folder to run praat function, so save current location and go there
         curr_dir = pwd;
-        temp_str = which('get_formant_tracks.praat');
+        temp_str = which('get_pitch_tracks.praat');
         praat_path = fileparts(temp_str);
         cd(praat_path)
 
@@ -46,13 +46,15 @@ switch params.ptrack_method
         audiowrite('temp_wav.wav',y,fs)
 
         if ismac
-            status = system(['"/Applications/Praat.app/Contents/MacOS/Praat" --run get_pitch_track.praat "' pwd '" "temp_wav" ' ...
+            % TODO update
+            status = system(['"/Applications/Praat.app/Contents/MacOS/Praat" --run get_pitch_tracks.praat "' pwd '" "temp_wav" ' ...
                 num2str(params.max_candidates) ' ' num2str(params.silence_thresh) ' ' num2str(params.voicing_thresh) ' ' ...
                 num2str(params.octave_cost) ' ' num2str(params.octave_jump_cost) ' ' num2str(params.voiced_unvoiced_cost)]);
         else
-            status = system(['"C:\Users\Public\Desktop\Praat.exe" --run get_pitch_track.praat "' pwd '" "temp_wav" ' ...
-                num2str(params.max_candidates) ' ' num2str(params.silence_thresh) ' ' num2str(params.voicing_thresh) ' ' ...
-                num2str(params.octave_cost) ' ' num2str(params.octave_jump_cost) ' ' num2str(params.voiced_unvoiced_cost)]);
+            status = system(['"C:\Users\Public\Desktop\Praat.exe" --run get_pitch_tracks.praat "' pwd '" "temp_wav" ' ...
+                num2str(params.pitchlimits(1)) ' ' num2str(params.max_candidates) ' ' params.pitch_very_accurate_checkbox ' ' ...
+                num2str(params.silence_thresh) ' ' num2str(params.voicing_thresh) ' ' num2str(params.octave_cost) ' ' ...
+                num2str(params.octave_jump_cost) ' ' num2str(params.voiced_unvoiced_cost) ' ' num2str(params.pitchlimits(2))]);
         end
         if status ~= 0
             error('Something went wrong in Praat analysis')
