@@ -7,6 +7,8 @@ function [pitchsig,varargout] = ...
 % yanalframe_ms = 30; % milliseconds (the default)
 % yanalstep_ms  = 10; % milliseconds (the default)
 
+% TODO update header
+
 if nargin < 7
     params = struct;
 end
@@ -20,14 +22,18 @@ if nargin < 4 || isempty(yanalframe_ms)
     yanalframe_ms = 30;
 end
 
+% these same pitch tracking settings are also stored in:
+%   free-speech\speech\get_sigproc_defaults.m 
+%   wave_viewer\wave_viewer.m\get_sigproc_params
 defaultParams.pitchlimits = [50 300];
+defaultParams.ptrack_method = 'praat';
 defaultParams.max_candidates = 15;
+defaultParams.pitch_very_accurate_checkbox = 'no';
 defaultParams.silence_thresh = 0.03;
 defaultParams.voicing_thresh = 0.45;
 defaultParams.octave_cost = 0.01;
 defaultParams.octave_jump_cost = 0.35;
 defaultParams.voiced_unvoiced_cost = 0.14;
-defaultParams.ptrack_method = 'praat';
 params = set_missingFields(params, defaultParams, 0);
 
 %%
@@ -43,13 +49,13 @@ switch params.ptrack_method
         %% Praat wrapper code here
         % write y to file (this will be deleted later, it is just written to the
         % current directory)
-        audiowrite('temp_wav.wav',y,fs)
+        audiowrite('temp_wav.wav',sig,fs)
 
         if ismac
-            % TODO update
             status = system(['"/Applications/Praat.app/Contents/MacOS/Praat" --run get_pitch_tracks.praat "' pwd '" "temp_wav" ' ...
-                num2str(params.max_candidates) ' ' num2str(params.silence_thresh) ' ' num2str(params.voicing_thresh) ' ' ...
-                num2str(params.octave_cost) ' ' num2str(params.octave_jump_cost) ' ' num2str(params.voiced_unvoiced_cost)]);
+                num2str(params.pitchlimits(1)) ' ' num2str(params.max_candidates) ' ' params.pitch_very_accurate_checkbox ' ' ...
+                num2str(params.silence_thresh) ' ' num2str(params.voicing_thresh) ' ' num2str(params.octave_cost) ' ' ...
+                num2str(params.octave_jump_cost) ' ' num2str(params.voiced_unvoiced_cost) ' ' num2str(params.pitchlimits(2))]);
         else
             status = system(['"C:\Users\Public\Desktop\Praat.exe" --run get_pitch_tracks.praat "' pwd '" "temp_wav" ' ...
                 num2str(params.pitchlimits(1)) ' ' num2str(params.max_candidates) ' ' params.pitch_very_accurate_checkbox ' ' ...
@@ -66,7 +72,7 @@ switch params.ptrack_method
         % put in 'pitch' output
         pitchsig = round(ptrack_table.pitch', 2); % TODO decide if we want to keep pitch as floats or to reduce down        
         if nargout <= 2
-            varargout{1} = round(ptrack_table.time', 5) *  1000; %convert s->ms; round to 100s place of ms, which is praat's actual precision
+            varargout{1} = round(ptrack_table.time', 5);  %round to 100s place of ms, which is praat's actual precision
         end
 
         % clean up by deleting files that were created and return to previous
