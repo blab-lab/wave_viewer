@@ -1,4 +1,4 @@
-function [pitchsig,varargout] = ...
+function [pitchsig,pitch_taxis] = ...
     get_sig_pitch(sig,fs,pitchlimits,yanalframe_ms,yanalstep_ms,yes_verbose, params)
 % Takes in a signal and returns its pitch (f0). 
 %
@@ -10,15 +10,9 @@ function [pitchsig,varargout] = ...
 % In the Praat method, the `pitchlimits` input argument is igored, and
 % params.pitchlimits determines the pitch floor and ceiling.
 %
-% In the Praat method, the output arguments are like this:
-% 1.) `pitchsig`. pitch values. Where Praat did not detect pitch, value is NaN
-% 2.) vector of time points (in seconds) aligned with output arg 1
-%
-% In the non-Praat method, the output arguments are like this:
-% 1.) pitch values
-% 2.) yanalframelen
-% 3.) ystep
-% 4.) nframes
+% The output arguments are:
+% 1.) `pitchsig`. Pitch values. Where Praat did not detect pitch, value is NaN
+% 2.) `pitch_taxis`. Vector of time points (in seconds) aligned with output arg 1
 
 if nargin < 7
     params = struct;
@@ -80,11 +74,9 @@ switch params.ptrack_method
         % load pitch track from file written by Praat 
         ptrack_table = readtable('temp_wav_pitch.txt', 'Delimiter', ',', 'TreatAsMissing', '--undefined--');
 
-        % put in 'pitch' output
-        pitchsig = round(ptrack_table.pitch', 2); % TODO decide if we want to keep pitch as floats or to reduce down        
-        if nargout <= 2
-            varargout{1} = round(ptrack_table.time', 5);  %round to 100s place of ms, which is praat's actual precision
-        end
+        % set output variables
+        pitchsig = round(ptrack_table.pitch', 2);
+        pitch_taxis = round(ptrack_table.time', 5);  %round to one hundredth of a millisecond, which is praat's actual precision
 
         % clean up by deleting files that were created and return to previous
         % directory
@@ -196,9 +188,8 @@ switch params.ptrack_method
         if yes_verbose, fprintf('done\n'); end
         if yes_verbose, fprintf('done getting sig pitch\n'); end
 
-        if nargout >= 2, varargout{1} = yanalframelen; end
-        if nargout >= 3, varargout{2} = ystep; end
-        if nargout >= 4, varargout{3} = nframes; end
+        len_pitchsig = length(pitchsig);
+        pitch_taxis = (0:(len_pitchsig-1))/fs;
 
 end
 

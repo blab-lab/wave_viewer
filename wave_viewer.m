@@ -1055,13 +1055,7 @@ set(pitch_ax,'UserData',pitch_axinfo);
 end
 
 function [the_axdat,the_params] = make_pitch_axdat(y,fs,pitchlimits,thresh4voicing_spec,sigproc_params)
-if isfield(sigproc_params, 'ptrack_method') && strcmp(sigproc_params.ptrack_method, 'praat')
-    [ypitch, pitch_taxis] = get_sig_pitch(y, fs, pitchlimits, [], [], [], sigproc_params);
-else
-    ypitch = get_sig_pitch(y, fs, pitchlimits, [], [], [], sigproc_params);
-    len_ypitch = length(ypitch);
-    pitch_taxis = (0:(len_ypitch-1))/fs;
-end
+[ypitch, pitch_taxis] = get_sig_pitch(y, fs, pitchlimits, [], [], [], sigproc_params);
 ampl4pitch = interp1(thresh4voicing_spec.ampl_taxis,thresh4voicing_spec.ampl,pitch_taxis);
 ypitch(ampl4pitch < thresh4voicing_spec.ampl_thresh4voicing) = NaN;
 the_axdat = ypitch;
