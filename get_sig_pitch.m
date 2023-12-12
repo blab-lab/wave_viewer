@@ -1,13 +1,24 @@
 function [pitchsig,varargout] = ...
     get_sig_pitch(sig,fs,pitchlimits,yanalframe_ms,yanalstep_ms,yes_verbose, params)
-% function [pitchsig,[yanalframelen_out],[ystep_out],[nframes_out]] = ...
-%     getwavepitch(sig,fs,pitchlimits,[yanalframe_ms],[yanalstep_ms],[yes_verbose])
-% for example:
-% pitchlimits = [150 300]; % Hz limits for pitch for isubj = 1
-% yanalframe_ms = 30; % milliseconds (the default)
-% yanalstep_ms  = 10; % milliseconds (the default)
-
-% TODO update header
+% Takes in a signal and returns its pitch (f0). 
+%
+% If params.ptrack_method is set to 'praat' (the default), other Praat
+% settings stored in input arg `params` will be used during the Praat call.
+% If params.ptrack_method is not 'praat', the legacy functionality will be
+% used: pitch is calculated within this function.
+%
+% In the Praat method, the `pitchlimits` input argument is igored, and
+% params.pitchlimits determines the pitch floor and ceiling.
+%
+% In the Praat method, the output arguments are like this:
+% 1.) `pitchsig`. pitch values. Where Praat did not detect pitch, value is NaN
+% 2.) vector of time points (in seconds) aligned with output arg 1
+%
+% In the non-Praat method, the output arguments are like this:
+% 1.) pitch values
+% 2.) yanalframelen
+% 3.) ystep
+% 4.) nframes
 
 if nargin < 7
     params = struct;
