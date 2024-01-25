@@ -48,25 +48,32 @@ switch params.ptrack_method
         %must be in git repo folder to run praat function, so save current location and go there
         curr_dir = pwd;
         temp_str = which('get_pitch_tracks.praat');
-        praat_path = fileparts(temp_str);
-        cd(praat_path)
+        wave_viewer_path = fileparts(temp_str);
+        cd(wave_viewer_path)
 
         %% Praat wrapper code here
         % write y to file (this will be deleted later, it is just written to the
         % current directory)
+
+        % rescale if necessary to avoid clipping
+        maxSigVal = max(abs(sig));
+        if maxSigVal > .99
+            scaleRatio = .99/maxSigVal;
+            sig = sig.*scaleRatio;
+        end
+
         audiowrite('temp_wav.wav',sig,fs)
 
         if ismac
-            status = system(['"/Applications/Praat.app/Contents/MacOS/Praat" --run get_pitch_tracks.praat "' pwd '" "temp_wav" ' ...
-                num2str(params.pitchlimits(1)) ' ' num2str(params.max_candidates) ' ' params.pitch_very_accurate_checkbox ' ' ...
-                num2str(params.silence_thresh) ' ' num2str(params.voicing_thresh) ' ' num2str(params.octave_cost) ' ' ...
-                num2str(params.octave_jump_cost) ' ' num2str(params.voiced_unvoiced_cost) ' ' num2str(params.pitchlimits(2))]);
+            praat_path = '/Applications/Praat.app/Contents/MacOS/Praat';
         else
-            status = system(['"C:\Users\Public\Desktop\Praat.exe" --run get_pitch_tracks.praat "' pwd '" "temp_wav" ' ...
-                num2str(params.pitchlimits(1)) ' ' num2str(params.ptrack_max_candidates) ' ' params.ptrack_pitch_very_accurate_checkbox ' ' ...
-                num2str(params.ptrack_silence_thresh) ' ' num2str(params.ptrack_voicing_thresh) ' ' num2str(params.ptrack_octave_cost) ' ' ...
-                num2str(params.ptrack_octave_jump_cost) ' ' num2str(params.ptrack_voiced_unvoiced_cost) ' ' num2str(params.pitchlimits(2))]);
+            praat_path = 'C:\Users\Public\Desktop\Praat.exe';
         end
+        status = system(['"' praat_path '" --run get_pitch_tracks.praat "' pwd '" "temp_wav" ' ...
+            num2str(params.pitchlimits(1)) ' ' num2str(params.ptrack_max_candidates) ' ' params.ptrack_pitch_very_accurate_checkbox ' ' ...
+            num2str(params.ptrack_silence_thresh) ' ' num2str(params.ptrack_voicing_thresh) ' ' num2str(params.ptrack_octave_cost) ' ' ...
+            num2str(params.ptrack_octave_jump_cost) ' ' num2str(params.ptrack_voiced_unvoiced_cost) ' ' num2str(params.pitchlimits(2))]);
+        
         if status ~= 0
             error('Something went wrong in Praat analysis')
         end
