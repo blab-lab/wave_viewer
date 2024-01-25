@@ -22,13 +22,13 @@ form Measure pitch values for segments in a textgrid
 endform
 
 ### open the sound and select it
-input_fullpath$ = directory_name$ + "\" + input_filename$ + ".wav"
-Read from file... 'input_fullpath$'
+wav_name$ = input_filename$ + ".wav"
+Read from file... 'directory_name$'/'wav_name$'
 selectObject: 1
 
 ### set up output text file
 output_filename$ = input_filename$ + "_pitch.txt"
-output_fullpath$ = directory_name$ + "\" + output_filename$
+output_fullpath$ = directory_name$ + "/" + output_filename$
 writeFileLine: output_fullpath$, "time,pitch"
 
 ### get pitch and append results to output text file
