@@ -30,7 +30,7 @@ if nargin < 3 || isempty(params)
     % these same pitch tracking settings are also stored in:
     %   free-speech\speech\get_sigproc_defaults.m
     %   wave_viewer\wave_viewer.m\get_sigproc_params
-    defaultParams.pitchlimits = [50 300];
+    defaultParams.pitchlimits = [75 300];
     defaultParams.ptrack_method = 'praat';
     defaultParams.ptrack_max_candidates = 15;
     defaultParams.ptrack_pitch_very_accurate_checkbox = 'no';

@@ -282,9 +282,6 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
             num2str(params.ptrack_max_candidates), num2str(params.ptrack_silence_thresh), num2str(params.ptrack_voicing_thresh), ...
             num2str(params.ptrack_octave_cost), num2str(params.ptrack_octave_jump_cost), num2str(params.ptrack_voiced_unvoiced_cost)};
         fieldsize = repmat([1 40],9,1);
-        % fieldsize = [1 45; 1 20; 1 20; ...
-        %     1 20; 1 20; 1 20; ...
-        %     1 20; 1 20; 1 20];
         answer = inputdlg(prompt, dlgtitle, fieldsize, definput);
 
         if isempty(answer) % user clicked Cancel

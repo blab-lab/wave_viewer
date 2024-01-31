@@ -18,7 +18,7 @@ form Measure pitch values for segments in a textgrid
     positive octave_cost 0.01
     positive octave_jump_cost 0.35
     positive voiced_unvoiced_cost 0.14
-    positive pitch_ceiling 600
+    positive pitch_ceiling 300
 endform
 
 ### open the sound and select it
