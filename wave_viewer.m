@@ -1061,7 +1061,7 @@ if ~isempty(sigmat) && isfield(sigmat,'pitch')
     params{1}.taxis = sigmat.pitch_taxis;
     params{1}.pitchlimits = pitchlimits;
 else
-    [axdat{1},params{1}] = make_pitch_axdat(y,fs,pitchlimits,thresh4voicing_spec,p.sigproc_params);
+    [axdat{1},params{1}] = make_pitch_axdat(y,fs,thresh4voicing_spec,p.sigproc_params);
 end
 
 % create pitch ax in taxesPanel
@@ -1078,7 +1078,6 @@ t_max = wave_axinfo.t_hlim;
 fs = wave_axinfo.params{1}.fs;
 y = wave_axinfo.dat{1};
 
-pitchlimits = p.sigproc_params.pitchlimits;
 ampl_thresh4voicing = p.sigproc_params.ampl_thresh4voicing;
 
 thresh4voicing_spec.ampl = ampl_axinfo.dat{1};
@@ -1087,7 +1086,7 @@ thresh4voicing_spec.ampl_thresh4voicing = ampl_thresh4voicing;
 
 % include under if statement (only if params that affect pitch are changed)
 % if pitch params changed
-[axdat{1},params{1}] = make_pitch_axdat(y,fs,pitchlimits,thresh4voicing_spec,p.sigproc_params);
+[axdat{1},params{1}] = make_pitch_axdat(y,fs,thresh4voicing_spec,p.sigproc_params);
 % end
 
 pitch_axinfo = get(pitch_ax,'UserData');
@@ -1105,13 +1104,13 @@ update_tmarker(pitch_axinfo.h_tmarker_hi,[]);
 set(pitch_ax,'UserData',pitch_axinfo);
 end
 
-function [the_axdat,the_params] = make_pitch_axdat(y,fs,pitchlimits,thresh4voicing_spec,sigproc_params)
-[ypitch, pitch_taxis] = get_sig_pitch(y, fs, pitchlimits, [], [], [], sigproc_params);
+function [the_axdat,the_params] = make_pitch_axdat(y,fs,thresh4voicing_spec,sigproc_params)
+[ypitch, pitch_taxis] = get_sig_pitch(y, fs, sigproc_params, [], [], []);
 ampl4pitch = interp1(thresh4voicing_spec.ampl_taxis,thresh4voicing_spec.ampl,pitch_taxis);
 ypitch(ampl4pitch < thresh4voicing_spec.ampl_thresh4voicing) = NaN;
 the_axdat = ypitch;
 the_params.fs = fs;
-the_params.pitchlimits = pitchlimits;
+the_params.pitchlimits = sigproc_params.pitchlimits;
 the_params.taxis = pitch_taxis;
 end
 
