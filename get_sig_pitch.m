@@ -15,6 +15,9 @@ function [pitchsig,pitch_taxis] = ...
 % 1.) `pitchsig`. Pitch values. Where Praat did not detect pitch, value is NaN
 % 2.) `pitch_taxis`. Vector of time points (in seconds) aligned with output arg 1
 
+if nargin < 7
+    params = struct;
+end
 if nargin < 6 || isempty(yes_verbose)
     yes_verbose = 0;
 end
