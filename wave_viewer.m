@@ -1010,7 +1010,7 @@ if ~isempty(sigmat) && isfield(sigmat,'pitch')
     params{1}.taxis = sigmat.pitch_taxis;
     params{1}.pitchlimits = pitchlimits;
 else
-    [axdat{1},params{1}] = make_pitch_axdat(y,fs,pitchlimits,thresh4voicing_spec);
+    [axdat{1},params{1}] = make_pitch_axdat(y,fs,pitchlimits,thresh4voicing_spec,p.sigproc_params);
 end
 
 % create pitch ax in taxesPanel
@@ -1036,7 +1036,7 @@ thresh4voicing_spec.ampl_thresh4voicing = ampl_thresh4voicing;
 
 % include under if statement (only if params that affect pitch are changed)
 % if pitch params changed
-[axdat{1},params{1}] = make_pitch_axdat(y,fs,pitchlimits,thresh4voicing_spec);
+[axdat{1},params{1}] = make_pitch_axdat(y,fs,pitchlimits,thresh4voicing_spec,p.sigproc_params);
 % end
 
 pitch_axinfo = get(pitch_ax,'UserData');
@@ -1054,10 +1054,8 @@ update_tmarker(pitch_axinfo.h_tmarker_hi,[]);
 set(pitch_ax,'UserData',pitch_axinfo);
 end
 
-function [the_axdat,the_params] = make_pitch_axdat(y,fs,pitchlimits,thresh4voicing_spec)
-[ypitch,window_size,frame_step,nframes] = get_sig_pitch(y,fs,pitchlimits);
-len_ypitch = length(ypitch);
-pitch_taxis = (0:(len_ypitch-1))/fs;
+function [the_axdat,the_params] = make_pitch_axdat(y,fs,pitchlimits,thresh4voicing_spec,sigproc_params)
+[ypitch, pitch_taxis] = get_sig_pitch(y, fs, pitchlimits, [], [], [], sigproc_params);
 ampl4pitch = interp1(thresh4voicing_spec.ampl_taxis,thresh4voicing_spec.ampl,pitch_taxis);
 ypitch(ampl4pitch < thresh4voicing_spec.ampl_thresh4voicing) = NaN;
 the_axdat = ypitch;
@@ -2293,6 +2291,7 @@ event_params = struct('event_names', [], ...
 end
 
 function [sigproc_params] = get_sigproc_params()
+% These settings also set in free-speech\speech\get_sigproc_defaults.m and wave_viewer\get_pitch_tracks.praat
 sigproc_params = struct('fs', 11025, ...
     'ms_framespec_gram', 'broadband', ...
     'ms_framespec_form', 'more narrowband', ...
@@ -2303,7 +2302,15 @@ sigproc_params = struct('fs', 11025, ...
     'pitchlimits', [50 300], ...
     'ampl_thresh4voicing', 0, ...
     'nlpc_choices', 7:20, ...
-    'preemph_range', [-2 3]);
+    'preemph_range', [-2 3], ... 
+    'ptrack_method','praat', ...
+    'ptrack_max_candidates', 15, ...
+    'ptrack_silence_thresh', 0.03, ...
+    'ptrack_voicing_thresh', 0.45, ...
+    'ptrack_octave_cost', 0.01, ...
+    'ptrack_octave_jump_cost', 0.35, ...
+    'ptrack_voiced_unvoiced_cost', 0.14);
+
 end
 
 %% get figure params (used to be global vars)
