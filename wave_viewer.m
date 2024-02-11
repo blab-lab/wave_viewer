@@ -729,6 +729,8 @@ marker_captured = 0;
                     unheighten_ax(the_ax);
                 case 'c' % shortcut for "continue" button
                     contprogram([],[]);
+                case 't'
+                    my_colormap('my_gray',1,p.plot_params.thresh_gray,p.plot_params.max_gray);
                 otherwise
                     fprintf('len(%d)\n',length(event.Key));
                     fprintf('%d,',event.Key);
