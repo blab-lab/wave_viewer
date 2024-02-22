@@ -124,7 +124,7 @@ fprintf('yes_start_blocking(%d)\n',yes_start_blocking);
 %% set up GUI
 
 % create new figure
-hf = figure('Name',p.plot_params.name,'Units','normalized','Position',p.plot_params.figpos);
+hf = figure('Name',p.plot_params.name,'Units','normalized','Position',p.plot_params.figpos); 
 set(hf,'DeleteFcn',@delete_func);
 
 p.guidata = guihandles(hf);
@@ -389,10 +389,6 @@ hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
             end
         end
     end
-
-
-
-
 
 % clear events button
 clearEventsButtonPos = [padL+buttonWidth*1/2 horiz_orig buttonWidth*1/2 buttonHeight];
@@ -669,6 +665,7 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
         end
         set(gram_ax,'UserData',axinfo);
     end
+
 % calc button
 calcButtonPos = [padL horiz_orig buttonWidth buttonHeight];
 hbutton.calc = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...

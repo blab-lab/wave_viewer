@@ -1,3 +1,7 @@
 # matlab autosave files
 *.asv
 *.m~
+# other files being used in testing
+audioGUI.m
+*.mat
+*/*
