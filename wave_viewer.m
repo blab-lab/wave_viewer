@@ -183,14 +183,14 @@ update_wave_ax_tlims_from_gram_ax(wave_ax,gram_ax);
 % reorder the axes with wave_ax on top
 ntAx = 0;
 ntAx = ntAx + 1; tAx(ntAx) = ampl_ax; set_ax_i(ampl_ax,ntAx);
-ntAx = ntAx + 1; tAx(ntAx) = pitch_ax; set_ax_i(pitch_ax,ntAx);
-ntAx = ntAx + 1; tAx(ntAx) = gram_ax; set_ax_i(gram_ax,ntAx);
-ntAx = ntAx + 1; tAx(ntAx) = wave_ax; set_ax_i(wave_ax,ntAx);
+ntAx = ntAx + 1; tAx(ntAx) = pitch_ax; set_ax_i(pitch_ax,ntAx-1); % TKTK RK CHANGE % working here
+ntAx = ntAx + 1; tAx(ntAx) = gram_ax; set_ax_i(gram_ax,ntAx-1);
+ntAx = ntAx + 1; tAx(ntAx) = wave_ax; set_ax_i(wave_ax,ntAx-2);
 if ~isempty(p.plot_params.axfracts)
-    set_axfracts(tAx,ntAx,p.plot_params.axfracts);
-    reposition_ax(tAx,ntAx);
+    set_axfracts(tAx,2,p.plot_params.axfracts);
+    reposition_ax(tAx, 2); %reposition_ax(tAx,ntAx); % TKTK RK CHANGE
 else
-    redistrib_ax(tAx,ntAx);
+    redistrib_ax(tAx,2); %ntAx); % TKTK RK CHANGE
 end
 cur_ax = tAx(1);
 
@@ -1594,6 +1594,9 @@ end
 function set_ax_i(ax,i)
 axinfo = get(ax,'UserData');
 axinfo.i = i;
+if ~mod(i, 2) % TKTK RK CHANGE
+    set(ax,'YAxisLocation', 'right')
+end
 set(ax,'UserData',axinfo);
 end
 
