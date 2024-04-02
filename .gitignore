@@ -5,3 +5,4 @@
 audioGUI.m
 *.mat
 */*
+temp_wav.wav

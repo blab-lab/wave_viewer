@@ -1,19 +1,22 @@
-# get_formants.praat
-# BEN PARRELL 18 DEC 2017
+# get_fast_tracks.praat by Henry Nomeland, 21 Mar 2024
+# adapted from get_formants.praat by Ben Parrell, 18 Dec 2017
 #
-# Measure formants for whole .wav file
-# For use with wave_viewer
+# measures formants for a .wav file utilizing tools and utils of FastTrack
+# FastTrack code available here: https://github.com/santiagobarreda/FastTrack/
+# for use with wave_viewer
+
+include utils/trackAutoselectProcedure.praat
 
 #Inputs
 form Measure formant values for segments in a textgrid
     sentence directory_name: /Users/Ben/Documents/MATLAB/wave_viewer
-	sentence file_name: temp_wav
+    sentence file_name: temp_wav
+    positive minimum_formant 0
     positive maximum_formant 5500
-    positive number_of_formants 5
-	positive window_size 0.025
-    positive time_step 0.005
-	positive preemphasis 50
-	positive fs 11025
+    positive number_steps 100
+    positive num_coefs 10
+    positive num_formants 3
+    sentence tracking_method: burg
 endform
 
 #open the sound and select it
@@ -22,7 +25,8 @@ Read from file... 'directory_name$'/'wav_name$'
 soundID1$ = selected$("Sound")
 
 #extract formants
-To Formant (burg)... 'time_step' 'number_of_formants' 'maximum_formant' 'window_size' 'preemphasis'
+@trackAutoselectProcedure: soundID1$, directory_name$, minimum_formant, maximum_formant, number_steps, num_coefs, num_formants, tracking_method$, 0, soundID1$, 0, 5500, 2, 0, 0
+selectObject: soundID1$
 formant = selected ("Formant")
 
 #write formants
