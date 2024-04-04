@@ -44,7 +44,7 @@ function output = praat_ftrack_func(y,params)
 %%% function which executes Praat script using params
     %must be in git repo folder to run praat function, so save current location and go there
     curr_dir = pwd;
-    temp_str = which('get_fast_tracks.praat');
+    temp_str = which('get_formant_tracks.praat');
     praat_path = fileparts(temp_str);
     cd(praat_path)
     
@@ -61,9 +61,9 @@ function output = praat_ftrack_func(y,params)
     preemphasis = 50;
     
     if ismac
-        status = system(['"/Applications/Praat.app/Contents/MacOS/Praat" --run get_fast_tracks.praat "' pwd '" "temp_wav" ' num2str(max_formant) ' ' num2str(params.nlpc/2) ' ' num2str(params.window_size) ' ' num2str(params.step_size) ' ' num2str(preemphasis) ' ' num2str(params.fs)]);
+        status = system(['"/Applications/Praat.app/Contents/MacOS/Praat" --run get_formant_tracks.praat "' pwd '" "temp_wav" ' num2str(max_formant) ' ' num2str(params.nlpc/2) ' ' num2str(params.window_size) ' ' num2str(params.step_size) ' ' num2str(preemphasis) ' ' num2str(params.fs)]);
     else
-        status = system(['"C:\Users\Public\Desktop\Praat.exe" --run get_fast_tracks.praat "' pwd '" "temp_wav" ' num2str(max_formant) ' ' num2str(params.nlpc/2) ' ' num2str(params.window_size) ' ' num2str(params.step_size) ' ' num2str(preemphasis) ' ' num2str(params.fs)]);
+        status = system(['"C:\Users\Public\Desktop\Praat.exe" --run get_formant_tracks.praat "' pwd '" "temp_wav" ' num2str(max_formant) ' ' num2str(params.nlpc/2) ' ' num2str(params.window_size) ' ' num2str(params.step_size) ' ' num2str(preemphasis) ' ' num2str(params.fs)]);
     end
     if status ~= 0
         error('Something went wrong in Praat analysis')
