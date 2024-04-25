@@ -16,28 +16,27 @@ include utils/trackAutoselectProcedure.praat
 
 formants = 3
 time_step = 0.002
-method$ = burg
 steps = 20
 coefficients = 5
 out_formant = 2
 fastTrackMinimumDuration = 0.030000000000001
 lowestAnalysisFrequency = 0
-highestAnalysisFrequency 5500
+highestAnalysisFrequency = 5500
 
+method$ = "burg"
 wav_name$ = file_name$ + ".wav"
-Read from file... 'directory_name$'/'wav_name$'
+Read from file... 'dir$'/'wav_name$'
 soundID1$ = selected$("Sound")
 select Sound 'soundID1$'
 
-if windowDuration >= fastTrackMinimumDuration
-      @trackAutoselect: selected(), dir$, lowestAnalysisFrequency, highestAnalysisFrequency, steps, coefficients, formants, method$, 0, selected(), 0, 4000, 2, 2, 0
+@trackAutoselect: selected(), dir$, lowestAnalysisFrequency, highestAnalysisFrequency, steps, coefficients, formants, method$, 0, selected(), 0, 4000, 2, 0, 0
 
 formant = selected ("Formant")
 
 #write formants
 formant_name$ = file_name$ + "_formants.txt"
 Down to Table... yes yes 6 no 3 yes 3 no 
-Save as tab-separated file... 'directory_name$'/'formant_name$'
+Save as tab-separated file... 'dir$'/'formant_name$'
 
 #extract LPC parameters
 #selectObject: formant

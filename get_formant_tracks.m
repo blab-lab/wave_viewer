@@ -41,7 +41,7 @@ end
 if nargout >= 3, ftrack_lpc_coeffs = lpc_coeffs; end
 
 function output = praat_ftrack_func(y,params)
-%%% function which executes Praat script using params
+%%% function which executes Fast Track script using params
     %must be in git repo folder to run praat function, so save current location and go there
     curr_dir = pwd;
     temp_str = which('get_fast_tracks.praat');
@@ -49,21 +49,21 @@ function output = praat_ftrack_func(y,params)
     cd(praat_path)
     
     fs = params.fs;
+    faxis = params.faxis;
+    nlpc_coeffs = params.nlpc;
     nformants = params.nformants;
-    
+
     %%% Praat wrapper code here
     % write y to file (this will be deleted later, it is just written to the
     % current directory)
     audiowrite('temp_wav.wav',y,fs)
-    
-    % set praat params that are not changeable
     max_formant = 5500;
     preemphasis = 50;
     
     if ismac
-        status = system(['"/Applications/Praat.app/Contents/MacOS/Praat" --run get_fast_tracks.praat "' pwd]);
+        status = system(['"/Applications/Praat.app/Contents/MacOS/Praat" --run get_fast_tracks.praat "' pwd '" "temp_wav"']);
     else
-        status = system(['"C:\Users\Public\Desktop\Praat.exe" --run get_fast_tracks.praat "' pwd]);
+        status = system(['"C:\Users\nomeland\Documents\Praat.exe" --run get_fast_tracks.praat "' pwd '" "temp_wav"']);
     end
     if status ~= 0
         error('Something went wrong in Praat analysis')
@@ -102,7 +102,7 @@ function output = praat_ftrack_func(y,params)
     
     % clean up by deleting files and return to previous directory
     delete temp_wav.wav 
-    % delete temp_wav_formants.txt
+    delete temp_wav_formants.txt
     cd(curr_dir)
     
     % establish outputs
@@ -110,4 +110,4 @@ function output = praat_ftrack_func(y,params)
     output{1} = formant;
     output{2} = lpc_coeffs;
     output{3} = msaxis * 1000; %covert from s to ms
-%%% end of praat function
+%%% end of Fast Track function
