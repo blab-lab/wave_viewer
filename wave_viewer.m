@@ -846,15 +846,7 @@ set(hf,'WindowButtonMotionFcn',@set_current_ax);
 set(hf,'KeyPressFcn',@key_press_func);
 set(hf,'ResizeFcn',@fig_resize_func);
 if yes_profile, profile off; end
-if yes_start_blocking && p.sigproc_params.autocont ~= 1, uiwait(hf); end
-
-%%% CODE FOR AUTOCONTINUE
-if p.sigproc_params.autocont
-    if p.sigproc_params.autocont == 1
-        contprogram([],[]);
-    end
-end
-
+if yes_start_blocking, uiwait(hf); end
 end
 
 %%
@@ -2316,8 +2308,7 @@ sigproc_params = struct('fs', 11025, ...
     'ptrack_voicing_thresh', 0.45, ...
     'ptrack_octave_cost', 0.01, ...
     'ptrack_octave_jump_cost', 0.35, ...
-    'ptrack_voiced_unvoiced_cost', 0.14, ...
-    'autocont', 0);
+    'ptrack_voiced_unvoiced_cost', 0.14);
 end
 
 %% get figure params (used to be global vars)
