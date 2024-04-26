@@ -49,16 +49,12 @@ function output = praat_ftrack_func(y,params)
     cd(praat_path)
     
     fs = params.fs;
-    faxis = params.faxis;
-    nlpc_coeffs = params.nlpc;
     nformants = params.nformants;
 
     %%% Praat wrapper code here
     % write y to file (this will be deleted later, it is just written to the
     % current directory)
     audiowrite('temp_wav.wav',y,fs)
-    max_formant = 5500;
-    preemphasis = 50;
     
     if ismac
         status = system(['"/Applications/Praat.app/Contents/MacOS/Praat" --run get_fast_tracks.praat "' pwd '" "temp_wav"']);

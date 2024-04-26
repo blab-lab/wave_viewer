@@ -15,15 +15,15 @@ include utils/trackAutoselectProcedure.praat
 @getSettings
 
 formants = 3
-time_step = 0.002
-steps = 20
-coefficients = 5
+time_step = 0.01
+steps = 10
+coefficients = 2
 out_formant = 2
 fastTrackMinimumDuration = 0.030000000000001
-lowestAnalysisFrequency = 0
-highestAnalysisFrequency = 5500
+lowestAnalysisFrequency = 2400
+highestAnalysisFrequency = 3200
 
-method$ = "burg"
+method$ = "robust"
 wav_name$ = file_name$ + ".wav"
 Read from file... 'dir$'/'wav_name$'
 soundID1$ = selected$("Sound")
