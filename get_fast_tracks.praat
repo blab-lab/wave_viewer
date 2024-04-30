@@ -1,4 +1,4 @@
-# get_fast_tracks.praat by Henry Nomeland, 21 Mar 2024
+    # get_fast_tracks.praat by Henry Nomeland, 21 Mar 2024
 # adapted from get_formants.praat by Ben Parrell, 18 Dec 2017
 #
 # measures formants for a .wav file utilizing tools and utils of FastTrack
@@ -15,15 +15,15 @@ include utils/trackAutoselectProcedure.praat
 @getSettings
 
 formants = 3
-time_step = 0.01
-steps = 10
-coefficients = 2
+time_step = 0.002
+steps = 30
+coefficients = 3
 out_formant = 2
 fastTrackMinimumDuration = 0.030000000000001
-lowestAnalysisFrequency = 2400
-highestAnalysisFrequency = 3200
+lowestAnalysisFrequency = 4800
+highestAnalysisFrequency = 5500
 
-method$ = "robust"
+method$ = "burg"
 wav_name$ = file_name$ + ".wav"
 Read from file... 'dir$'/'wav_name$'
 soundID1$ = selected$("Sound")
