@@ -19,7 +19,6 @@ time_step = 0.002
 steps = 30
 coefficients = 3
 out_formant = 2
-fastTrackMinimumDuration = 0.030000000000001
 lowestAnalysisFrequency = 4800
 highestAnalysisFrequency = 5500
 
@@ -45,4 +44,4 @@ Save as tab-separated file... 'dir$'/'formant_name$'
 
 #save LPC parameters
 #lpc_name$ = file_name$ + "_lpc.txt"
-#Save as headerless spreadsheet file... 'directory_name$'/'lpc_name$'
+#Save as headerless spreadsheet file... 'dir$'/'lpc_name$'

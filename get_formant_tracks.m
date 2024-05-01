@@ -18,7 +18,7 @@ switch ftrack_method
     case 'colea', ftrack_func = @colea_ftrack_func; params.nformants_max = 3; params.yes_trackperframe = 1;
     case 'mine',  ftrack_func = @my_ftrack_func;    params.nformants_max = 3; params.yes_trackperframe = 1;
     case 'mine2', ftrack_func = @my_ftrack_func2;   params.nformants_max = 4; params.yes_trackperframe = 1;
-    case 'praat', ftrack_func = @fasttrack_ftrack_func; params.nformants_max = 5; params.yes_trackperframe = 0;
+    case 'praat', ftrack_func = @praat_ftrack_func; params.nformants_max = 5; params.yes_trackperframe = 0;
     case 'fasttrack', ftrack_func = @fasttrack_ftrack_func; params.nformants_max = 5; params.yes_trackperframe = 0;
     otherwise, error('formant tracking method(%s) unrecognized',ftrack_method);
 end
