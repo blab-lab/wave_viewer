@@ -1104,7 +1104,7 @@ set(pitch_ax,'UserData',pitch_axinfo);
 end
 
 function [the_axdat,the_params] = make_pitch_axdat(y,fs,thresh4voicing_spec,sigproc_params)
-[ypitch, pitch_taxis] = get_sig_pitch(y, fs, sigproc_params, [], [], []);
+[ypitch, pitch_taxis] = get_sig_pitch(y, fs, sigproc_params;
 ampl4pitch = interp1(thresh4voicing_spec.ampl_taxis,thresh4voicing_spec.ampl,pitch_taxis);
 ypitch(ampl4pitch < thresh4voicing_spec.ampl_thresh4voicing) = NaN;
 the_axdat = ypitch;

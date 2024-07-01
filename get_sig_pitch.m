@@ -98,7 +98,7 @@ switch ptrack_method
         cd(curr_dir)
     
 
-    otherwise
+    otherwise % if ptrack_method is anything other than 'praat', use legacy pitch tracking code
         if isstruct(params) && isfield(params, 'pitchlimits')
             pitchlimits = params.pitchlimits;
         else
