@@ -1,22 +1,20 @@
 function [pitchsig,pitch_taxis] = ...
-    get_sig_pitch(sig,fs,pitchlimits,yanalframe_ms,yanalstep_ms,yes_verbose, params)
+    get_sig_pitch(sig,fs,params,yanalframe_ms,yanalstep_ms,yes_verbose)
 % Takes in a signal and returns its pitch (f0). 
 %
 % If params.ptrack_method is set to 'praat' (the default), other Praat
 % settings stored in input arg `params` will be used during the Praat call.
-% If params.ptrack_method is not 'praat', the legacy functionality will be
-% used: pitch is calculated within this function.
+% `params` is assumed to be a structure.
 %
-% In the Praat method, the `pitchlimits` input argument is igored, and
-% params.pitchlimits determines the pitch floor and ceiling.
+% If params.ptrack_method is not 'praat', the legacy functionality will be
+% used: pitch is calculated within this function. `params` can be either
+% a struct with pitchlimits as a field (new way), or
+% a vector containing pitch limits (old way).
 %
 % The output arguments are:
 % 1.) `pitchsig`. Pitch values. Where Praat did not detect pitch, value is NaN
 % 2.) `pitch_taxis`. Vector of time points (in seconds) aligned with output arg 1
 
-if nargin < 7
-    params = struct;
-end
 if nargin < 6 || isempty(yes_verbose)
     yes_verbose = 0;
 end
@@ -26,47 +24,63 @@ end
 if nargin < 4 || isempty(yanalframe_ms)
     yanalframe_ms = 30;
 end
+if nargin < 3 || isempty(params)
+    params = struct;
+    
+    % these same pitch tracking settings are also stored in:
+    %   free-speech\speech\get_sigproc_defaults.m
+    %   wave_viewer\wave_viewer.m\get_sigproc_params
+    defaultParams.pitchlimits = [75 300];
+    defaultParams.ptrack_method = 'praat';
+    defaultParams.ptrack_max_candidates = 15;
+    defaultParams.ptrack_pitch_very_accurate_checkbox = 'no';
+    defaultParams.ptrack_silence_thresh = 0.03;
+    defaultParams.ptrack_voicing_thresh = 0.45;
+    defaultParams.ptrack_octave_cost = 0.01;
+    defaultParams.ptrack_octave_jump_cost = 0.35;
+    defaultParams.ptrack_voiced_unvoiced_cost = 0.14;
+    params = set_missingFields(params, defaultParams, 0);
+end
 
-% these same pitch tracking settings are also stored in:
-%   free-speech\speech\get_sigproc_defaults.m 
-%   wave_viewer\wave_viewer.m\get_sigproc_params
-defaultParams.pitchlimits = [50 300];
-defaultParams.ptrack_method = 'praat';
-defaultParams.ptrack_max_candidates = 15;
-defaultParams.ptrack_pitch_very_accurate_checkbox = 'no';
-defaultParams.ptrack_silence_thresh = 0.03;
-defaultParams.ptrack_voicing_thresh = 0.45;
-defaultParams.ptrack_octave_cost = 0.01;
-defaultParams.ptrack_octave_jump_cost = 0.35;
-defaultParams.ptrack_voiced_unvoiced_cost = 0.14;
-params = set_missingFields(params, defaultParams, 0);
+if isstruct(params) && isfield(params, 'ptrack_method')
+    ptrack_method = params.ptrack_method;
+else
+    ptrack_method = 'not_specified';
+end
 
 %%
-switch params.ptrack_method
+switch ptrack_method
     case 'praat'
         % execute Praat script using params
         %must be in git repo folder to run praat function, so save current location and go there
         curr_dir = pwd;
         temp_str = which('get_pitch_tracks.praat');
-        praat_path = fileparts(temp_str);
-        cd(praat_path)
+        wave_viewer_path = fileparts(temp_str);
+        cd(wave_viewer_path)
 
         %% Praat wrapper code here
         % write y to file (this will be deleted later, it is just written to the
         % current directory)
+
+        % rescale if necessary to avoid clipping
+        maxSigVal = max(abs(sig));
+        if maxSigVal > .99
+            scaleRatio = .99/maxSigVal;
+            sig = sig.*scaleRatio;
+        end
+
         audiowrite('temp_wav.wav',sig,fs)
 
         if ismac
-            status = system(['"/Applications/Praat.app/Contents/MacOS/Praat" --run get_pitch_tracks.praat "' pwd '" "temp_wav" ' ...
-                num2str(params.pitchlimits(1)) ' ' num2str(params.max_candidates) ' ' params.pitch_very_accurate_checkbox ' ' ...
-                num2str(params.silence_thresh) ' ' num2str(params.voicing_thresh) ' ' num2str(params.octave_cost) ' ' ...
-                num2str(params.octave_jump_cost) ' ' num2str(params.voiced_unvoiced_cost) ' ' num2str(params.pitchlimits(2))]);
+            praat_path = '/Applications/Praat.app/Contents/MacOS/Praat';
         else
-            status = system(['"C:\Users\Public\Desktop\Praat.exe" --run get_pitch_tracks.praat "' pwd '" "temp_wav" ' ...
-                num2str(params.pitchlimits(1)) ' ' num2str(params.ptrack_max_candidates) ' ' params.ptrack_pitch_very_accurate_checkbox ' ' ...
-                num2str(params.ptrack_silence_thresh) ' ' num2str(params.ptrack_voicing_thresh) ' ' num2str(params.ptrack_octave_cost) ' ' ...
-                num2str(params.ptrack_octave_jump_cost) ' ' num2str(params.ptrack_voiced_unvoiced_cost) ' ' num2str(params.pitchlimits(2))]);
+            praat_path = 'C:\Users\Public\Desktop\Praat.exe';
         end
+        praatCmd = sprintf('"%s" --run get_pitch_tracks.praat "%s" "temp_wav" %d %d %s %.4f %.4f %.4f %.4f %.4f %d', ...
+            praat_path, pwd, params.pitchlimits(1), params.ptrack_max_candidates, params.ptrack_pitch_very_accurate_checkbox, ...
+            params.ptrack_silence_thresh, params.ptrack_voicing_thresh, params.ptrack_octave_cost, params.ptrack_octave_jump_cost, ...
+            params.ptrack_voiced_unvoiced_cost, params.pitchlimits(2));
+        status = system(praatCmd);
         if status ~= 0
             error('Something went wrong in Praat analysis')
         end
@@ -84,7 +98,13 @@ switch params.ptrack_method
         cd(curr_dir)
     
 
-    otherwise
+    otherwise % if ptrack_method is anything other than 'praat', use legacy pitch tracking code
+        if isstruct(params) && isfield(params, 'pitchlimits')
+            pitchlimits = params.pitchlimits;
+        else
+            pitchlimits = params;
+        end
+
         [rows_sig,cols_sig] = size(sig);
         yes_transpose = 0;
         if cols_sig > 1

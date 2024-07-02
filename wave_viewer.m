@@ -231,13 +231,13 @@ alert4calcFx = 0;       % function before the calc button is created
 
 
 % help button
-helpButtonPos = [padL horiz_orig buttonWidth buttonHeight];
+helpButtonPos = [padL horiz_orig buttonWidth/2 buttonHeight];
 hbutton.help = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
     'String','help',...
     'Units','Normalized','Position',helpButtonPos,...
     'FontUnits','Normalized','FontSize',buttonFontSize,...
     'Callback',@my_help_func);
-horiz_orig = horiz_orig + buttonHeight + padYButton;
+% no change in horiz_orig, since "pitch params" is in-line with "help"
     function my_help_func(hObject,eventdata)   % callback for help button
         helpstr = sprintf(['keyboard shortcuts:\n', ...
             '"c": continue to next trial\n', ...
@@ -253,6 +253,54 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
             '"h": heighten\n', ...
             '"u": unheighten = reduce\n']);
         helpdlg(helpstr);
+    end
+
+% pitch params button
+pitchParamButtonPos = [padL+buttonWidth*1/2 horiz_orig buttonWidth*1/2 buttonHeight];
+hbutton.pitch_params = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
+    'String','pitch params',...
+    'Units','Normalized','Position',pitchParamButtonPos,...
+    'FontUnits','Normalized','FontSize',buttonFontSize*0.75,...
+    'Callback',@edit_pitch_params);
+% TODO make text in 2 rows
+horiz_orig = horiz_orig + buttonHeight + padYButton;
+    function edit_pitch_params(hObject,eventdata) % callback for h_button.pitch_params
+        params = p.sigproc_params;
+        default_params = get_sigproc_params();
+        dlgtitle = 'Params';
+        prompt = {strcat('pitch track method (default:  ', default_params.ptrack_method, ')'),...
+            sprintf('pitch limit (min) (default: %.0f)', default_params.pitchlimits(1)),...
+            sprintf('pitch limit (max) (default: %.0f)', default_params.pitchlimits(2)),...
+            sprintf('max candidates (default: %.0f)', default_params.ptrack_max_candidates),...
+            sprintf('silence threshold (default: %1.2f)', default_params.ptrack_silence_thresh),...
+            sprintf('voicing threshold (default: %1.2f)', default_params.ptrack_voicing_thresh),...
+            sprintf('octave cost (default: %1.2f)', default_params.ptrack_octave_cost),...
+            sprintf('octave jump cost (default: %1.2f)', default_params.ptrack_octave_jump_cost),...
+            sprintf('voiced/unvoiced cost (default: %1.2f)', default_params.ptrack_voiced_unvoiced_cost),...
+            };
+        definput = {params.ptrack_method, num2str(params.pitchlimits(1)), num2str(params.pitchlimits(2)), ...
+            num2str(params.ptrack_max_candidates), num2str(params.ptrack_silence_thresh), num2str(params.ptrack_voicing_thresh), ...
+            num2str(params.ptrack_octave_cost), num2str(params.ptrack_octave_jump_cost), num2str(params.ptrack_voiced_unvoiced_cost)};
+        fieldsize = repmat([1 40],9,1);
+        answer = inputdlg(prompt, dlgtitle, fieldsize, definput);
+
+        if isempty(answer) % user clicked Cancel
+            return;
+        end
+        
+        if ~all(cellfun(@isequal, definput, answer')) % user changed a value
+            set_alert4calcFx_if_true(true)
+            p.sigproc_params.ptrack_method = answer{1};
+            p.sigproc_params.pitchlimits(1) = str2double(answer{2});
+            p.sigproc_params.pitchlimits(2) = str2double(answer{3});
+            p.sigproc_params.ptrack_max_candidates = str2double(answer{4});
+            p.sigproc_params.ptrack_silence_thresh = str2double(answer{5});
+            p.sigproc_params.ptrack_voicing_thresh = str2double(answer{6});
+            p.sigproc_params.ptrack_octave_cost = str2double(answer{7});
+            p.sigproc_params.ptrack_octave_jump_cost = str2double(answer{8});
+            p.sigproc_params.ptrack_voiced_unvoiced_cost = str2double(answer{9});
+        end
+
     end
 
 % play button
@@ -1012,7 +1060,7 @@ if ~isempty(sigmat) && isfield(sigmat,'pitch')
     params{1}.taxis = sigmat.pitch_taxis;
     params{1}.pitchlimits = pitchlimits;
 else
-    [axdat{1},params{1}] = make_pitch_axdat(y,fs,pitchlimits,thresh4voicing_spec,p.sigproc_params);
+    [axdat{1},params{1}] = make_pitch_axdat(y,fs,thresh4voicing_spec,p.sigproc_params);
 end
 
 % create pitch ax in taxesPanel
@@ -1029,7 +1077,6 @@ t_max = wave_axinfo.t_hlim;
 fs = wave_axinfo.params{1}.fs;
 y = wave_axinfo.dat{1};
 
-pitchlimits = p.sigproc_params.pitchlimits;
 ampl_thresh4voicing = p.sigproc_params.ampl_thresh4voicing;
 
 thresh4voicing_spec.ampl = ampl_axinfo.dat{1};
@@ -1038,7 +1085,7 @@ thresh4voicing_spec.ampl_thresh4voicing = ampl_thresh4voicing;
 
 % include under if statement (only if params that affect pitch are changed)
 % if pitch params changed
-[axdat{1},params{1}] = make_pitch_axdat(y,fs,pitchlimits,thresh4voicing_spec,p.sigproc_params);
+[axdat{1},params{1}] = make_pitch_axdat(y,fs,thresh4voicing_spec,p.sigproc_params);
 % end
 
 pitch_axinfo = get(pitch_ax,'UserData');
@@ -1056,13 +1103,13 @@ update_tmarker(pitch_axinfo.h_tmarker_hi,[]);
 set(pitch_ax,'UserData',pitch_axinfo);
 end
 
-function [the_axdat,the_params] = make_pitch_axdat(y,fs,pitchlimits,thresh4voicing_spec,sigproc_params)
-[ypitch, pitch_taxis] = get_sig_pitch(y, fs, pitchlimits, [], [], [], sigproc_params);
+function [the_axdat,the_params] = make_pitch_axdat(y,fs,thresh4voicing_spec,sigproc_params)
+[ypitch, pitch_taxis] = get_sig_pitch(y, fs, sigproc_params);
 ampl4pitch = interp1(thresh4voicing_spec.ampl_taxis,thresh4voicing_spec.ampl,pitch_taxis);
 ypitch(ampl4pitch < thresh4voicing_spec.ampl_thresh4voicing) = NaN;
 the_axdat = ypitch;
 the_params.fs = fs;
-the_params.pitchlimits = pitchlimits;
+the_params.pitchlimits = sigproc_params.pitchlimits;
 the_params.taxis = pitch_taxis;
 end
 
@@ -2301,12 +2348,13 @@ sigproc_params = struct('fs', 11025, ...
     'nlpc', 11, ...
     'nformants', 3, ...
     'preemph', 0.95, ...
-    'pitchlimits', [50 300], ...
+    'pitchlimits', [75 300], ...
     'ampl_thresh4voicing', 0, ...
     'nlpc_choices', 7:20, ...
     'preemph_range', [-2 3], ... 
     'ptrack_method','praat', ...
     'ptrack_max_candidates', 15, ...
+    'ptrack_pitch_very_accurate_checkbox', 'no', ...
     'ptrack_silence_thresh', 0.03, ...
     'ptrack_voicing_thresh', 0.45, ...
     'ptrack_octave_cost', 0.01, ...
