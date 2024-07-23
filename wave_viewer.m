@@ -172,7 +172,8 @@ p.guidata.taxesPanel = uipanel(p.guidata.f,'Units','Normalized',...
 
 %% axes
 % create new axes
-wave_ax = new_wave_ax(y,p);
+% RK TKTKTKTKTK CONSTRUCTION ZONE
+wave_ax = new_wave_ax(y,p); 
 ampl_ax = new_ampl_ax(wave_ax,p,sigmat);
 pitch_ax = new_pitch_ax(wave_ax,ampl_ax,p,sigmat);
 gram_ax = new_gram_ax(wave_ax,ampl_ax,p,sigmat);
@@ -182,15 +183,17 @@ update_wave_ax_tlims_from_gram_ax(wave_ax,gram_ax);
 
 % reorder the axes with wave_ax on top
 ntAx = 0;
-ntAx = ntAx + 1; tAx(ntAx) = ampl_ax; set_ax_i(ampl_ax,ntAx);
-ntAx = ntAx + 1; tAx(ntAx) = pitch_ax; set_ax_i(pitch_ax,ntAx);
-ntAx = ntAx + 1; tAx(ntAx) = gram_ax; set_ax_i(gram_ax,ntAx);
-ntAx = ntAx + 1; tAx(ntAx) = wave_ax; set_ax_i(wave_ax,ntAx);
+ntAx = ntAx + 1; tAx(ntAx) = pitch_ax; set_ax_i(pitch_ax,ntAx-1); % RK changed order of these axes so that 1/3 are together (amplitude and waveform)
+ntAx = ntAx + 1; tAx(ntAx) = ampl_ax; set_ax_i(ampl_ax,ntAx); % And 2/4 are together (pitch and spectrogram) 
+ntAx = ntAx + 1; tAx(ntAx) = gram_ax; set_ax_i(gram_ax,ntAx-1); % tAx (3) is the spectrogram (second) 
+ntAx = ntAx + 1; tAx(ntAx) = wave_ax; set_ax_i(wave_ax,ntAx-2); %tAx(4) is the wave (on top) 
 if ~isempty(p.plot_params.axfracts)
-    set_axfracts(tAx,ntAx,p.plot_params.axfracts);
-    reposition_ax(tAx,ntAx);
+    set_axfracts(tAx,2,p.plot_params.axfracts);
+    reposition_ax(tAx(1:2), 2); %reposition_ax(tAx,ntAx); % TKTK RK CHANGE
+    reposition_ax(tAx(3:4), 2); 
 else
-    redistrib_ax(tAx,ntAx);
+    redistrib_ax(tAx(3:4), 2, 'left'); %ntAx); % TKTK RK CHANGE 
+    redistrib_ax(tAx(1:2), 2, 'right', 'none')
 end
 cur_ax = tAx(1);
 
@@ -906,201 +909,201 @@ end
 %% ax creation/update stuff
 
 function wave_ax = new_wave_ax(y,p)
-% ensure y is a row vector
-[row_y,col_y] = size(y);
-if row_y > 1
-    if col_y > 1, error('cannot currently handle signals that are matrices');
-    else, y = y'; % make y a row vector if it was a column vector
+    % ensure y is a row vector
+    [row_y,col_y] = size(y);
+    if row_y > 1
+        if col_y > 1, error('cannot currently handle signals that are matrices');
+        else, y = y'; % make y a row vector if it was a column vector
+        end
     end
-end
-fs = p.sigproc_params.fs;
-name = p.plot_params.name;
-
-axdat{1} = y;
-params{1}.taxis = (0:(length(y)-1))/fs;
-params{1}.fs = fs;
-params{1}.player_started = 0;
-params{1}.start_player_t = 0;
-params{1}.stop_player_t = 0;
-params{1}.current_player_t = 0;
-params{1}.inc_player_t = 0.01;
-h_player = audioplayer(0.5*y/max(abs(y)),fs); % the scaling of y is a bit of a hack to make audioplayer play like soundsc
-params{1}.h_player = h_player;
-params{1}.isamps2play_total = get(h_player,'TotalSamples');
-set(h_player,'StartFcn',@player_start);
-set(h_player,'StopFcn',@player_stop);
-set(h_player,'TimerFcn',@player_runfunc);
-set(h_player,'TimerPeriod',params{1}.inc_player_t);
-
-% create wave ax in taxesPanel
-wave_ax = axes(p.guidata.taxesPanel);
-set(params{1}.h_player,'UserData',wave_ax); % set the audioplayer UserData to the wave ax handle?
-axinfo = new_axinfo('wave',params{1}.taxis,[],axdat,wave_ax,[],name,params{1}.taxis(1),params{1}.taxis(end),params,p);
-set(wave_ax,'UserData',axinfo);
+    fs = p.sigproc_params.fs;
+    name = p.plot_params.name;
+    
+    axdat{1} = y;
+    params{1}.taxis = (0:(length(y)-1))/fs;
+    params{1}.fs = fs;
+    params{1}.player_started = 0;
+    params{1}.start_player_t = 0;
+    params{1}.stop_player_t = 0;
+    params{1}.current_player_t = 0;
+    params{1}.inc_player_t = 0.01;
+    h_player = audioplayer(0.5*y/max(abs(y)),fs); % the scaling of y is a bit of a hack to make audioplayer play like soundsc
+    params{1}.h_player = h_player;
+    params{1}.isamps2play_total = get(h_player,'TotalSamples');
+    set(h_player,'StartFcn',@player_start);
+    set(h_player,'StopFcn',@player_stop);
+    set(h_player,'TimerFcn',@player_runfunc);
+    set(h_player,'TimerPeriod',params{1}.inc_player_t);
+    
+    % create wave ax in taxesPanel
+    wave_ax = axes(p.guidata.taxesPanel);
+    set(params{1}.h_player,'UserData',wave_ax); % set the audioplayer UserData to the wave ax handle?
+    axinfo = new_axinfo('wave',params{1}.taxis,[],axdat,wave_ax,[],name,params{1}.taxis(1),params{1}.taxis(end),params,p);
+    set(wave_ax,'UserData',axinfo);
 end
 
 function update_wave_ax_tlims_from_gram_ax(wave_ax,gram_ax)
-wave_axinfo = get(wave_ax,'UserData');
-gram_axinfo = get(gram_ax,'UserData');
-t_min = gram_axinfo.t_llim;
-t_max = gram_axinfo.t_hlim;
-the_axdat = wave_axinfo.dat{1};
-hax = wave_axinfo.h;
-set_viewer_axlims(hax,t_min,t_max,the_axdat);
-wave_axinfo.t_llim = t_min;
-wave_axinfo.t_hlim = t_max;
-set(wave_ax,'UserData',wave_axinfo);
-update_tmarker(wave_axinfo.h_tmarker_low,[]);
-update_tmarker(wave_axinfo.h_tmarker_spec,[]);
-update_tmarker(wave_axinfo.h_tmarker_hi,[]);
-set(wave_ax,'UserData',wave_axinfo);
+    wave_axinfo = get(wave_ax,'UserData');
+    gram_axinfo = get(gram_ax,'UserData');
+    t_min = gram_axinfo.t_llim;
+    t_max = gram_axinfo.t_hlim;
+    the_axdat = wave_axinfo.dat{1};
+    hax = wave_axinfo.h;
+    set_viewer_axlims(hax,t_min,t_max,the_axdat);
+    wave_axinfo.t_llim = t_min;
+    wave_axinfo.t_hlim = t_max;
+    set(wave_ax,'UserData',wave_axinfo);
+    update_tmarker(wave_axinfo.h_tmarker_low,[]);
+    update_tmarker(wave_axinfo.h_tmarker_spec,[]);
+    update_tmarker(wave_axinfo.h_tmarker_hi,[]);
+    set(wave_ax,'UserData',wave_axinfo);
 end
 
 function ampl_ax = new_ampl_ax(wave_ax,p,sigmat)
-wave_axinfo = get(wave_ax,'UserData');
-fs = wave_axinfo.params{1}.fs;
-y = wave_axinfo.dat{1};
-ampl_thresh4voicing = p.sigproc_params.ampl_thresh4voicing;
-
-if ~isempty(sigmat) && isfield(sigmat,'ampl')
-    axdat{1} = sigmat.ampl;
-    params{1}.fs = fs;
-    params{1}.taxis = sigmat.ampl_taxis;
-else
-    [axdat{1},params{1}] = make_ampl_axdat(y,fs);
-end
-
-% create ampl ax in taxesPanel
-ampl_ax = axes(p.guidata.taxesPanel);
-axinfo = new_axinfo('ampl',params{1}.taxis,[],axdat,ampl_ax,[],wave_axinfo.name,params{1}.taxis(1),params{1}.taxis(end),params,wave_axinfo.p);
-axinfo.hl_ampl_thresh4voicing = set_ampl_thresh4voicing_line(ampl_thresh4voicing,axinfo,[]);
-set(ampl_ax,'UserData',axinfo);
+    wave_axinfo = get(wave_ax,'UserData');
+    fs = wave_axinfo.params{1}.fs;
+    y = wave_axinfo.dat{1};
+    ampl_thresh4voicing = p.sigproc_params.ampl_thresh4voicing;
+    
+    if ~isempty(sigmat) && isfield(sigmat,'ampl')
+        axdat{1} = sigmat.ampl;
+        params{1}.fs = fs;
+        params{1}.taxis = sigmat.ampl_taxis;
+    else
+        [axdat{1},params{1}] = make_ampl_axdat(y,fs);
+    end
+    
+    % create ampl ax in taxesPanel
+    ampl_ax = axes(p.guidata.taxesPanel);
+    axinfo = new_axinfo('ampl',params{1}.taxis,[],axdat,ampl_ax,[],wave_axinfo.name,params{1}.taxis(1),params{1}.taxis(end),params,wave_axinfo.p);
+    axinfo.hl_ampl_thresh4voicing = set_ampl_thresh4voicing_line(ampl_thresh4voicing,axinfo,[]);
+    set(ampl_ax,'UserData',axinfo);
 end
 
 function update_ampl_ax(ampl_ax,wave_ax,p)
-wave_axinfo = get(wave_ax,'UserData');
-t_min = wave_axinfo.t_llim;
-t_max = wave_axinfo.t_hlim;
-fs = wave_axinfo.params{1}.fs;
-y = wave_axinfo.dat{1};
-ampl_thresh4voicing = p.sigproc_params.ampl_thresh4voicing;
-old_ampl_axinfo = get(ampl_ax,'UserData');
-old_hl_ampl_thresh4voicing = old_ampl_axinfo.hl_ampl_thresh4voicing;
-
-[axdat{1},params{1}] = make_ampl_axdat(y,fs);
-
-ampl_axinfo = get(ampl_ax,'UserData');
-ampl_axinfo.dat = axdat;
-ampl_axinfo.datlims = size(axdat{1});
-ampl_axinfo.params = params;
-ampl_axinfo.taxis = params{1}.taxis;
-set(ampl_axinfo.hply(1),'XData',params{1}.taxis);
-set(ampl_axinfo.hply(1),'YData',axdat{1});
-set_viewer_axlims(ampl_ax,t_min,t_max,axdat{1});
-ampl_axinfo.hl_ampl_thresh4voicing = set_ampl_thresh4voicing_line(ampl_thresh4voicing,ampl_axinfo,old_hl_ampl_thresh4voicing);
-set(ampl_ax,'UserData',ampl_axinfo);
-update_tmarker(ampl_axinfo.h_tmarker_low,[]);
-update_tmarker(ampl_axinfo.h_tmarker_spec,[]);
-update_tmarker(ampl_axinfo.h_tmarker_hi,[]);
-set(ampl_ax,'UserData',ampl_axinfo);
+    wave_axinfo = get(wave_ax,'UserData');
+    t_min = wave_axinfo.t_llim;
+    t_max = wave_axinfo.t_hlim;
+    fs = wave_axinfo.params{1}.fs;
+    y = wave_axinfo.dat{1};
+    ampl_thresh4voicing = p.sigproc_params.ampl_thresh4voicing;
+    old_ampl_axinfo = get(ampl_ax,'UserData');
+    old_hl_ampl_thresh4voicing = old_ampl_axinfo.hl_ampl_thresh4voicing;
+    
+    [axdat{1},params{1}] = make_ampl_axdat(y,fs);
+    
+    ampl_axinfo = get(ampl_ax,'UserData');
+    ampl_axinfo.dat = axdat;
+    ampl_axinfo.datlims = size(axdat{1});
+    ampl_axinfo.params = params;
+    ampl_axinfo.taxis = params{1}.taxis;
+    set(ampl_axinfo.hply(1),'XData',params{1}.taxis);
+    set(ampl_axinfo.hply(1),'YData',axdat{1});
+    set_viewer_axlims(ampl_ax,t_min,t_max,axdat{1});
+    ampl_axinfo.hl_ampl_thresh4voicing = set_ampl_thresh4voicing_line(ampl_thresh4voicing,ampl_axinfo,old_hl_ampl_thresh4voicing);
+    set(ampl_ax,'UserData',ampl_axinfo);
+    update_tmarker(ampl_axinfo.h_tmarker_low,[]);
+    update_tmarker(ampl_axinfo.h_tmarker_spec,[]);
+    update_tmarker(ampl_axinfo.h_tmarker_hi,[]);
+    set(ampl_ax,'UserData',ampl_axinfo);
 end
 
 function [the_axdat,the_params] = make_ampl_axdat(y,fs)
-yampl = get_sig_ampl(y,fs);
-the_axdat = yampl;
-len_yampl = length(yampl);
-ampl_taxis = (0:(len_yampl-1))/fs;
-the_params.fs = fs;
-the_params.taxis = ampl_taxis;
+    yampl = get_sig_ampl(y,fs);
+    the_axdat = yampl;
+    len_yampl = length(yampl);
+    ampl_taxis = (0:(len_yampl-1))/fs;
+    the_params.fs = fs;
+    the_params.taxis = ampl_taxis;
 end
 
 function  hl_ampl_thresh4voicing = set_ampl_thresh4voicing_line(ampl_thresh4voicing,ampl_axinfo,old_hl_ampl_thresh4voicing)
-ylim = get(ampl_axinfo.h,'YLim');
-if ylim(1) <= ampl_thresh4voicing && ampl_thresh4voicing < ylim(2)
-    yes_inrange2plot = 1;
-else
-    yes_inrange2plot = 0;
-end
-if isempty(old_hl_ampl_thresh4voicing)
-    if yes_inrange2plot
-        hl_ampl_thresh4voicing = hline(ampl_thresh4voicing,'r');
-        set(hl_ampl_thresh4voicing,'Visible','on');
+    ylim = get(ampl_axinfo.h,'YLim');
+    if ylim(1) <= ampl_thresh4voicing && ampl_thresh4voicing < ylim(2)
+        yes_inrange2plot = 1;
     else
-        hl_ampl_thresh4voicing = hline(mean(ylim),'r');
-        set(hl_ampl_thresh4voicing,'Visible','off');
+        yes_inrange2plot = 0;
     end
-else
-    hl_ampl_thresh4voicing = old_hl_ampl_thresh4voicing;
-    if yes_inrange2plot
-        set(hl_ampl_thresh4voicing,'YData',ampl_thresh4voicing*[1 1]);
-        set(hl_ampl_thresh4voicing,'Visible','on');
+    if isempty(old_hl_ampl_thresh4voicing)
+        if yes_inrange2plot
+            hl_ampl_thresh4voicing = hline(ampl_thresh4voicing,'r');
+            set(hl_ampl_thresh4voicing,'Visible','on');
+        else
+            hl_ampl_thresh4voicing = hline(mean(ylim),'r');
+            set(hl_ampl_thresh4voicing,'Visible','off');
+        end
     else
-        set(hl_ampl_thresh4voicing,'YData',mean(ylim)*[1 1]);
-        set(hl_ampl_thresh4voicing,'Visible','off');
+        hl_ampl_thresh4voicing = old_hl_ampl_thresh4voicing;
+        if yes_inrange2plot
+            set(hl_ampl_thresh4voicing,'YData',ampl_thresh4voicing*[1 1]);
+            set(hl_ampl_thresh4voicing,'Visible','on');
+        else
+            set(hl_ampl_thresh4voicing,'YData',mean(ylim)*[1 1]);
+            set(hl_ampl_thresh4voicing,'Visible','off');
+        end
     end
-end
 end
 
 function pitch_ax = new_pitch_ax(wave_ax,ampl_ax,p,sigmat)
-wave_axinfo = get(wave_ax,'UserData');
-ampl_axinfo = get(ampl_ax,'UserData');
-fs = wave_axinfo.params{1}.fs;
-y = wave_axinfo.dat{1};
-
-pitchlimits = p.sigproc_params.pitchlimits;
-ampl_thresh4voicing = p.sigproc_params.ampl_thresh4voicing;
-
-thresh4voicing_spec.ampl = ampl_axinfo.dat{1};
-thresh4voicing_spec.ampl_taxis = ampl_axinfo.params{1}.taxis;
-thresh4voicing_spec.ampl_thresh4voicing = ampl_thresh4voicing;
-
-if ~isempty(sigmat) && isfield(sigmat,'pitch')
-    axdat{1} = sigmat.pitch;
-    params{1}.fs = fs;
-    params{1}.taxis = sigmat.pitch_taxis;
-    params{1}.pitchlimits = pitchlimits;
-else
-    [axdat{1},params{1}] = make_pitch_axdat(y,fs,thresh4voicing_spec,p.sigproc_params);
-end
-
-% create pitch ax in taxesPanel
-pitch_ax = axes(p.guidata.taxesPanel);
-axinfo = new_axinfo('pitch',params{1}.taxis,[],axdat,pitch_ax,[],wave_axinfo.name,params{1}.taxis(1),params{1}.taxis(end),params,wave_axinfo.p);
-set(pitch_ax,'UserData',axinfo);
+    wave_axinfo = get(wave_ax,'UserData');
+    ampl_axinfo = get(ampl_ax,'UserData');
+    fs = wave_axinfo.params{1}.fs;
+    y = wave_axinfo.dat{1};
+    
+    pitchlimits = p.sigproc_params.pitchlimits;
+    ampl_thresh4voicing = p.sigproc_params.ampl_thresh4voicing;
+    
+    thresh4voicing_spec.ampl = ampl_axinfo.dat{1};
+    thresh4voicing_spec.ampl_taxis = ampl_axinfo.params{1}.taxis;
+    thresh4voicing_spec.ampl_thresh4voicing = ampl_thresh4voicing;
+    
+    if ~isempty(sigmat) && isfield(sigmat,'pitch')
+        axdat{1} = sigmat.pitch;
+        params{1}.fs = fs;
+        params{1}.taxis = sigmat.pitch_taxis;
+        params{1}.pitchlimits = pitchlimits;
+    else
+        [axdat{1},params{1}] = make_pitch_axdat(y,fs,thresh4voicing_spec,p.sigproc_params);
+    end
+    
+    % create pitch ax in taxesPanel
+    pitch_ax = axes(p.guidata.taxesPanel);
+    axinfo = new_axinfo('pitch',params{1}.taxis,[],axdat,pitch_ax,[],wave_axinfo.name,params{1}.taxis(1),params{1}.taxis(end),params,wave_axinfo.p);
+    set(pitch_ax,'UserData',axinfo);
 end
 
 function  update_pitch_ax(pitch_ax,wave_ax,ampl_ax,p)
-wave_axinfo = get(wave_ax,'UserData');
-ampl_axinfo = get(ampl_ax,'UserData');
-t_min = wave_axinfo.t_llim;
-t_max = wave_axinfo.t_hlim;
-fs = wave_axinfo.params{1}.fs;
-y = wave_axinfo.dat{1};
-
-ampl_thresh4voicing = p.sigproc_params.ampl_thresh4voicing;
-
-thresh4voicing_spec.ampl = ampl_axinfo.dat{1};
-thresh4voicing_spec.ampl_taxis = ampl_axinfo.params{1}.taxis;
-thresh4voicing_spec.ampl_thresh4voicing = ampl_thresh4voicing;
-
-% include under if statement (only if params that affect pitch are changed)
-% if pitch params changed
-[axdat{1},params{1}] = make_pitch_axdat(y,fs,thresh4voicing_spec,p.sigproc_params);
-% end
-
-pitch_axinfo = get(pitch_ax,'UserData');
-pitch_axinfo.dat = axdat;
-pitch_axinfo.datlims = size(axdat{1});
-pitch_axinfo.params = params;
-pitch_axinfo.taxis = params{1}.taxis;
-set(pitch_axinfo.hply(1),'XData',params{1}.taxis);
-set(pitch_axinfo.hply(1),'YData',axdat{1});
-set_viewer_axlims(pitch_ax,t_min,t_max,axdat{1});
-set(pitch_ax,'UserData',pitch_axinfo);
-update_tmarker(pitch_axinfo.h_tmarker_low,[]);
-update_tmarker(pitch_axinfo.h_tmarker_spec,[]);
-update_tmarker(pitch_axinfo.h_tmarker_hi,[]);
-set(pitch_ax,'UserData',pitch_axinfo);
+    wave_axinfo = get(wave_ax,'UserData');
+    ampl_axinfo = get(ampl_ax,'UserData');
+    t_min = wave_axinfo.t_llim;
+    t_max = wave_axinfo.t_hlim;
+    fs = wave_axinfo.params{1}.fs;
+    y = wave_axinfo.dat{1};
+    
+    ampl_thresh4voicing = p.sigproc_params.ampl_thresh4voicing;
+    
+    thresh4voicing_spec.ampl = ampl_axinfo.dat{1};
+    thresh4voicing_spec.ampl_taxis = ampl_axinfo.params{1}.taxis;
+    thresh4voicing_spec.ampl_thresh4voicing = ampl_thresh4voicing;
+    
+    % include under if statement (only if params that affect pitch are changed)
+    % if pitch params changed
+    [axdat{1},params{1}] = make_pitch_axdat(y,fs,thresh4voicing_spec,p.sigproc_params);
+    % end
+    
+    pitch_axinfo = get(pitch_ax,'UserData');
+    pitch_axinfo.dat = axdat;
+    pitch_axinfo.datlims = size(axdat{1});
+    pitch_axinfo.params = params;
+    pitch_axinfo.taxis = params{1}.taxis;
+    set(pitch_axinfo.hply(1),'XData',params{1}.taxis);
+    set(pitch_axinfo.hply(1),'YData',axdat{1});
+    set_viewer_axlims(pitch_ax,t_min,t_max,axdat{1});
+    set(pitch_ax,'UserData',pitch_axinfo);
+    update_tmarker(pitch_axinfo.h_tmarker_low,[]);
+    update_tmarker(pitch_axinfo.h_tmarker_spec,[]);
+    update_tmarker(pitch_axinfo.h_tmarker_hi,[]);
+    set(pitch_ax,'UserData',pitch_axinfo);
 end
 
 function [the_axdat,the_params] = make_pitch_axdat(y,fs,thresh4voicing_spec,sigproc_params)
@@ -1402,7 +1405,7 @@ axinfo.faxis = faxis;
 
 switch axinfo.type
     case 'wave'
-        hply(1) = plot(taxis,axdat{1}); % hply = handle to the plotted y?
+        hply(1) = plot(taxis,axdat{1}, 'Color', [4, 54, 59]./255); % hply = handle to the plotted y?
         titlstr = sprintf('waveform(%s): %.1f sec, %d samples',name,t_range,axinfo.datlims(2));
         hylab = ylabel('ampl');
         set_viewer_axlims(hax,t_min,t_max,axdat{1});
@@ -1451,7 +1454,7 @@ switch axinfo.type
         hax.XTickLabel = [];
         
     case 'pitch'
-        hply(1) = plot(taxis,axdat{1});
+        hply(1) = plot(taxis,axdat{1}, 'Color', [0, 123, 255]./255);
         titlstr = sprintf('pitch(%s): %.1f sec, %d samples',name,t_range,axinfo.datlims(2));
         hylab = ylabel('Hz');
         set_viewer_axlims(hax,t_min,t_max,axdat{1});
@@ -1465,7 +1468,7 @@ switch axinfo.type
         hax.XTickLabel = [];
         
     case 'ampl'
-        hply(1) = plot(taxis,axdat{1});
+        hply(1) = plot(taxis,axdat{1}, 'Color', [255, 178, 0]./255);
         titlstr = sprintf('ampl(%s): %.1f sec, %d samples',name,t_range,axinfo.datlims(2));
         hylab = ylabel('ampl');
         set_viewer_axlims(hax,t_min,t_max,axdat{1});
@@ -1641,6 +1644,9 @@ end
 function set_ax_i(ax,i)
 axinfo = get(ax,'UserData');
 axinfo.i = i;
+if ~mod(i, 2) % TKTK RK CHANGE
+    set(ax,'YAxisLocation', 'right')
+end
 set(ax,'UserData',axinfo);
 end
 
@@ -2176,9 +2182,12 @@ set(ax,'XLim',[new_tlow new_thi]);
 update_tmarker(axinfo.h_tmarker_spec,[]);
 end
 
-function redistrib_ax(ax,nax)
+% working here too RK
+function redistrib_ax(ax,nax,yaxpos,backcol)
+if nargin < 3 || isempty(yaxpos), yaxpos = []; end
+if nargin < 4 || isempty(backcol), backcol = []; end
 reinit_axfracts(ax,nax);
-reposition_ax(ax,nax);
+reposition_ax(ax,nax,yaxpos,backcol);
 end
 
 function set_axfracts(ax,nax,axfracts)
@@ -2244,7 +2253,9 @@ if nax > 1
 end
 end
 
-function reposition_ax(ax,nax)
+function reposition_ax(ax,nax,yaxpos,backcol)
+if nargin < 3 || isempty(yaxpos), yaxpos = []; end
+if nargin < 4 || isempty(backcol), backcol = []; end
 [axarea_xo,axarea_yo,axarea_xw,axarea_yw] = get_axarea();
 axtile_xo = axarea_xo;
 axtile_xw = axarea_xw;
@@ -2254,6 +2265,19 @@ for iax = 1:nax
     axtile_yo = axarea_yo + axtile_yw_acc;
     axtile_yw = axfract_y*axarea_yw;
     set_ax_pos(ax(iax),axtile_xo,axtile_yo,axtile_xw,axtile_yw);
+    % Set aesthetics to make doubled up axes work. If no argument supplied, use what already exists in the axis spec
+    % Necessary because I am not going back through all the calls to reposition and/or redistribute to put in a default; we
+    % basically want to set them at the very beginning and then keep using it. 
+    if isempty(backcol) 
+        ax(iax).Color = ax(iax).Color; 
+    else
+        ax(iax).Color = backcol; 
+    end
+    if isempty(yaxpos)
+        ax(iax).YAxisLocation = ax(iax).YAxisLocation; 
+    else
+        ax(iax).YAxisLocation = yaxpos; 
+    end
     axtile_yw_acc = axtile_yw_acc + axtile_yw;
 end
 end
