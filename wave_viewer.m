@@ -172,10 +172,15 @@ p.guidata.taxesPanel = uipanel(p.guidata.f,'Units','Normalized',...
 
 %% axes
 % create new axes
+persistent wave_ax; % persistent vars are local but saved to mem outside of the function
 wave_ax = new_wave_ax(y,p);
+persistent ampl_ax;
 ampl_ax = new_ampl_ax(wave_ax,p,sigmat);
+persistent pitch_ax;
 pitch_ax = new_pitch_ax(wave_ax,ampl_ax,p,sigmat);
+persistent gram_ax;
 gram_ax = new_gram_ax(wave_ax,ampl_ax,p,sigmat);
+persistent spec_ax;
 spec_ax = new_spec_ax(gram_ax,p);
 
 update_wave_ax_tlims_from_gram_ax(wave_ax,gram_ax);
