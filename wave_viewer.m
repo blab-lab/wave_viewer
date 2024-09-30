@@ -902,7 +902,18 @@ set(hf,'WindowButtonMotionFcn',@set_current_ax);
 set(hf,'KeyPressFcn',@key_press_func);
 set(hf,'ResizeFcn',@fig_resize_func);
 if yes_profile, profile off; end
-if yes_start_blocking, uiwait(hf); end
+%if yes_start_blocking, uiwait(hf); end
+%end
+
+% FIXME testing alternatives to uiwait (err in audioGUI 154: endstate)
+% if true, script will end but figure will remain open
+if yes_start_blocking
+    set(hf, 'CloseRequestFcn', @figureCloseRequest); % close request
+    drawnow; % updates figure
+end
+
+function figureCloseRequest(src, ~) 
+ delete(src);
 end
 
 %%
