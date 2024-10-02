@@ -1693,21 +1693,33 @@ else
         marker_name_specs = marker_name;
     end
     n_marker_names = length(marker_name_specs);
+    
+       %TODO make all the markers load at once instead of individually 
     for i_marker_name = 1:n_marker_names
         marker_name_spec = marker_name_specs(i_marker_name);
         if ~isfield(marker_name_spec,'name'), error('marker_name_spec must have a "name" field'); end
-        if ~isfield(marker_name_spec,'vert_align'), marker_name_spec.vert_align = 'bottom'; end
-        if ~isfield(marker_name_spec,'color'), marker_name_spec.color = 'k'; end
-        if ~isfield(marker_name_spec,'idatsources'), marker_name_spec.idatsources = 0; end
-        if ~isfield(marker_name_spec,'idatrows'), marker_name_spec.idatrows = []; end
-        if ~isfield(marker_name_spec,'bgrect'), marker_name_spec.bgrect = []; end
-        if ~isfield(marker_name_spec,'iidatsource4ypos'), marker_name_spec.iidatsource4ypos = []; end
+        fields = {'vert_align', 'color', 'idatsources', 'idatrows', 'bgrect', 'iidatsource4ypos'};
+        defaultVals = {'bottom''', 'k''', 0, [], [], []};
+
+        for i=1:length(fields)
+            if ~isfield(marker_name_spec, fields{i})
+                marker_name_spec.fields{i} = defaultVals{i};
+            end
+        end
+
+%         if ~isfield(marker_name_spec,'vert_align'), marker_name_spec.vert_align = 'bottom'; end
+%         if ~isfield(marker_name_spec,'color'), marker_name_spec.color = 'k'; end
+%         if ~isfield(marker_name_spec,'idatsources'), marker_name_spec.idatsources = 0; end
+%         if ~isfield(marker_name_spec,'idatrows'), marker_name_spec.idatrows = []; end
+%         if ~isfield(marker_name_spec,'bgrect'), marker_name_spec.bgrect = []; end
+%         if ~isfield(marker_name_spec,'iidatsource4ypos'), marker_name_spec.iidatsource4ypos = []; end
+
         marker_name_spec.h_tmarker = h_tmarker;
         marker_name_str = get_marker_name_str(marker_name_spec,t);
         cur_hax = gca;
-        axes(hax);  % because the text() command only works with the current axes 
-        h_marker_name(i_marker_name) = text(t,tmarker_ydat(2),marker_name_str);
-        axes(cur_hax);
+        axes(cur_hax); %FIXME this is slow!!!!
+        %FIXME, wave_viewer >> t_marker
+       %axes(hax);  % because the text() command only works with the current axes 
         set(h_marker_name(i_marker_name),'VerticalAlignment',marker_name_spec.vert_align);
         if strcmp(marker_name_spec.color,'same')
             set(h_marker_name(i_marker_name),'Color',get(h_tmarker,'Color'));
