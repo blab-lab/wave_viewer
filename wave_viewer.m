@@ -185,6 +185,9 @@ spec_ax = new_spec_ax(gram_ax,p);
 
 update_wave_ax_tlims_from_gram_ax(wave_ax,gram_ax);
 
+
+update_wave_ax_tlims_from_gram_ax(wave_ax,gram_ax);
+
 % reorder the axes with wave_ax on top
 ntAx = 0;
 ntAx = ntAx + 1; tAx(ntAx) = ampl_ax; set_ax_i(ampl_ax,ntAx);
@@ -902,18 +905,7 @@ set(hf,'WindowButtonMotionFcn',@set_current_ax);
 set(hf,'KeyPressFcn',@key_press_func);
 set(hf,'ResizeFcn',@fig_resize_func);
 if yes_profile, profile off; end
-%if yes_start_blocking, uiwait(hf); end
-%end
-
-% FIXME testing alternatives to uiwait (err in audioGUI 154: endstate)
-% if true, script will end but figure will remain open
-if yes_start_blocking
-    set(hf, 'CloseRequestFcn', @figureCloseRequest); % close request
-    drawnow; % updates figure
-end
-
-function figureCloseRequest(src, ~) 
- delete(src);
+if yes_start_blocking, uiwait(hf); end
 end
 
 %%
@@ -1686,26 +1678,48 @@ h_tmarker = plot(hax,tmarker_xdat,tmarker_ydat,linestyle);
 set(h_tmarker,'LineWidth',line_width);
 if isempty(marker_name)
     h_marker_name = [];
-else
+ if strcmp(marker_name_spec.color,'same')
+            set(h_marker_name(i_marker_name),'Color',get(h_tmarker,'Color'));
+        else
+            set(h_marker_name(i_marker_name),'Color',marker_name_spec.color);
+        end
+        set(h_marker_name(i_marker_name),'UserData',marker_name_spec);
+        update_marker_name_bgrect(h_marker_name(i_marker_name));else
     if ~isstruct(marker_name)
         marker_name_specs(1).name = marker_name;
     else
         marker_name_specs = marker_name;
     end
     n_marker_names = length(marker_name_specs);
-    
-       %TODO make all the markers load at once instead of individually 
     for i_marker_name = 1:n_marker_names
         marker_name_spec = marker_name_specs(i_marker_name);
+        set(h_tmarker,'UserData',h_marker_name);
+
         if ~isfield(marker_name_spec,'name'), error('marker_name_spec must have a "name" field'); end
-        fields = {'vert_align', 'color', 'idatsources', 'idatrows', 'bgrect', 'iidatsource4ypos'};
+         fields = {'vert_align', 'color', 'idatsources', 'idatrows', 'bgrect', 'iidatsource4ypos'};
         defaultVals = {'bottom''', 'k''', 0, [], [], []};
 
         for i=1:length(fields)
             if ~isfield(marker_name_spec, fields{i})
-                marker_name_spec.fields{i} = defaultVals{i};
+                marker_name_specs.(fields{i})  = defaultVals{i};
             end
         end
+
+         % Prepare text properties
+            text_props{i_marker_name} = {'String', marker_name_spec.name, ...
+                'Position', [t, tmarker_ydat(1), 0], ...
+                'VerticalAlignment', marker_name_spec.vert_align, ...
+                'Parent', hax};
+            
+            if strcmp(marker_name_spec.color, 'same')
+                text_props{i_marker_name} = [text_props{i_marker_name}, {'Color', get(h_tmarker, 'Color')}];
+            else
+                text_props{i_marker_name} = [text_props{i_marker_name}, {'Color', marker_name_spec.color}];
+            end
+        end
+        
+        % Create all text objects at once
+        h_marker_name = text(text_props{:});
 
 %         if ~isfield(marker_name_spec,'vert_align'), marker_name_spec.vert_align = 'bottom'; end
 %         if ~isfield(marker_name_spec,'color'), marker_name_spec.color = 'k'; end
@@ -1713,25 +1727,25 @@ else
 %         if ~isfield(marker_name_spec,'idatrows'), marker_name_spec.idatrows = []; end
 %         if ~isfield(marker_name_spec,'bgrect'), marker_name_spec.bgrect = []; end
 %         if ~isfield(marker_name_spec,'iidatsource4ypos'), marker_name_spec.iidatsource4ypos = []; end
-
-        marker_name_spec.h_tmarker = h_tmarker;
-        marker_name_str = get_marker_name_str(marker_name_spec,t);
-        cur_hax = gca;
-        axes(cur_hax); %FIXME this is slow!!!!
+      
+    end
         %FIXME, wave_viewer >> t_marker
        %axes(hax);  % because the text() command only works with the current axes 
-        set(h_marker_name(i_marker_name),'VerticalAlignment',marker_name_spec.vert_align);
-        if strcmp(marker_name_spec.color,'same')
-            set(h_marker_name(i_marker_name),'Color',get(h_tmarker,'Color'));
-        else
-            set(h_marker_name(i_marker_name),'Color',marker_name_spec.color);
-        end
-        set(h_marker_name(i_marker_name),'UserData',marker_name_spec);
-        update_marker_name_bgrect(h_marker_name(i_marker_name));
-    end
+       
+%         if strcmp(marker_name_spec.color,'same')
+%             set(h_marker_name(i_marker_name),'Color',get(h_tmarker,'Color'));
+%         else
+%             set(h_marker_name(i_marker_name),'Color',marker_name_spec.color);
+%         end
+%         set(h_marker_name(i_marker_name),'UserData',marker_name_spec);
+%         update_marker_name_bgrect(h_marker_name(i_marker_name));
 end
-set(h_tmarker,'UserData',h_marker_name);
+% set(h_tmarker,'UserData',h_marker_name);
 if ~yes_visible, set(h_tmarker,'Visible','off'); end
+end
+
+function hax_axes()
+    axes(hax); %FIXME this is slow!!!!
 end
 
 function update_tmarker(h_tmarker,t)
