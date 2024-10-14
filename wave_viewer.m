@@ -2,22 +2,18 @@ function viewer_end_state = wave_viewer(y,varargin)
 %WAVEVIEWER  Acoustic analysis viewer.
 %   [VIEWER_END_STATE] = WAVEVIEWER(Y, [options...]) If the output argument
 %   VIEWER_END_STATE is provided, wave_viewer() will start blocked, otherwise command prompt is returned
-
 yes_profile = 0;
 if yes_profile, profile on; end
 
 %% param defaults
-
 p.plot_params = get_plot_params;
 p.sigproc_params = get_sigproc_params;
 p.event_params = get_event_params;
 all_ms_framespecs = get_all_ms_framespecs();
 
 %% set options from command line
-
 param_struct_names = fieldnames(p);
 n_param_structs = length(param_struct_names);
-
 [option_names,option_values] = make_option_specs(varargin{:});
 
 % Change this to first loop through param_struct_names looking for those
@@ -36,8 +32,7 @@ n_param_structs = length(param_struct_names);
 %     optname = option_names{iopt};
 %     optval = option_values{iopt};
 % end
-% 
-
+%
 %get data
 iopt = 0;
 while 1
@@ -101,7 +96,6 @@ for iopt = 1:nopts_left
 end
 
 %% validation check of params
-
 if isempty(p.plot_params.hzbounds4plot), p.plot_params.hzbounds4plot = [0 p.sigproc_params.fs/2]; end
 
 %%% convert v1.0 params to v2.0
@@ -116,17 +110,14 @@ if any(p.plot_params.figpos > 3)
 end
 
 %% blocking?
-
 if nargout >= 1, yes_start_blocking = 1; else, yes_start_blocking = 0; end
 if nargout >= 1, viewer_end_state.name = 'running'; end
 fprintf('yes_start_blocking(%d)\n',yes_start_blocking);
 
 %% set up GUI
-
 % create new figure
 hf = figure('Name',p.plot_params.name,'Units','normalized','Position',p.plot_params.figpos);
 set(hf,'DeleteFcn',@delete_func);
-
 p.guidata = guihandles(hf);
 p.guidata.f = hf;
 
@@ -184,8 +175,6 @@ persistent spec_ax;
 spec_ax = new_spec_ax(gram_ax,p);
 
 update_wave_ax_tlims_from_gram_ax(wave_ax,gram_ax);
-
-
 update_wave_ax_tlims_from_gram_ax(wave_ax,gram_ax);
 
 % reorder the axes with wave_ax on top
@@ -201,7 +190,6 @@ else
     redistrib_ax(tAx,ntAx);
 end
 cur_ax = tAx(1);
-
 nfAx = 0;
 nfAx = nfAx + 1; fAx(nfAx) = spec_ax; set_ax_i(spec_ax,nfAx);
 spec_ax_ypos = spec_ax.Position(2);     % correct for smaller faxes panel
@@ -211,9 +199,7 @@ spec_ax.Position(2) = spec_ax_ypos;     %
 spec_ax.Position(4) = spec_ax_height;   %
 
 %% buttons
-
 padL = .05;
-
 padYButton = .01;
 padYBig = .02;
 padYSmall = .002;
@@ -236,8 +222,6 @@ tinyPosYOffset = textPosYOffset*.75;
 hbutton.calc = [];      % not sure why these are set: could be
 normal_bgcolor = [];    % in case calcFx is somehow called by another
 alert4calcFx = 0;       % function before the calc button is created
-
-
 % help button
 helpButtonPos = [padL horiz_orig buttonWidth/2 buttonHeight];
 hbutton.help = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
@@ -262,7 +246,6 @@ hbutton.help = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
             '"u": unheighten = reduce\n']);
         helpdlg(helpstr);
     end
-
 % pitch params button
 pitchParamButtonPos = [padL+buttonWidth*1/2 horiz_orig buttonWidth*1/2 buttonHeight];
 hbutton.pitch_params = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
@@ -291,11 +274,9 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
             num2str(params.ptrack_octave_cost), num2str(params.ptrack_octave_jump_cost), num2str(params.ptrack_voiced_unvoiced_cost)};
         fieldsize = repmat([1 40],9,1);
         answer = inputdlg(prompt, dlgtitle, fieldsize, definput);
-
         if isempty(answer) % user clicked Cancel
             return;
         end
-        
         if ~all(cellfun(@isequal, definput, answer')) % user changed a value
             set_alert4calcFx_if_true(true)
             p.sigproc_params.ptrack_method = answer{1};
@@ -308,9 +289,7 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
             p.sigproc_params.ptrack_octave_jump_cost = str2double(answer{8});
             p.sigproc_params.ptrack_voiced_unvoiced_cost = str2double(answer{9});
         end
-
     end
-
 % play button
 playButtonPos = [padL horiz_orig buttonWidth buttonHeight];
 hbutton.play = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
@@ -322,7 +301,6 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
     function playin(hObject,eventdata) % callback for h_button_playin
         play_from_wave_ax(wave_ax);
     end
-
 % end button
 endButtonPos = [padL horiz_orig buttonWidth buttonHeight];
 hbutton.end = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
@@ -337,7 +315,6 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
             delete(hf);
         end
     end
-
 % previous button
 prevButtonPos = [padL horiz_orig buttonWidth/3 buttonHeight];
 hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
@@ -352,7 +329,6 @@ hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
             delete(hf);
         end
     end
-
 % continue button
 contButtonPos = [padL+buttonWidth*1/3 horiz_orig buttonWidth*2/3 buttonHeight];
 hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
@@ -378,9 +354,6 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
             end
         end
     end
-
-
-%%
 % edit events button
 editEventsButtonPos = [padL horiz_orig buttonWidth/2 buttonHeight];
 hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
@@ -394,11 +367,9 @@ hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
         axinfo = get(tAx(1), 'UserData');
         times = axinfo.p.event_params.user_event_times;
         names = axinfo.p.event_params.user_event_names;
-
         [~, sortOrder] = sort(times(:));
         times_sorted = times(sortOrder);
         names_sorted = names(sortOrder);
-
         if length(names) ~= length(times)
             warning('Mismatch between number of names and times in trialparams.event_params.user_event_times/names. Can''t edit.');
             return;
@@ -406,7 +377,6 @@ hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
         if length(names) < 1
             return;
         end
-
         % display list of events
         names_and_times = cell(1, length(names));
         for i = 1:length(names)
@@ -414,20 +384,16 @@ hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
         end
         [listIx, bSelectionMade] = listdlg('PromptString', 'Pick an event to rename.', ...
             'ListString', names_and_times, 'selectionMode', 'single');
-
         % update user events if exactly one event selected from list
         if bSelectionMade && length(listIx) == 1
             dlgTitle = 'Rename event';
             dlgPrompt = {sprintf('New name for %s:', names_sorted{listIx})};
             dlgDims = [1 40];
             newName = inputdlg(dlgPrompt, dlgTitle, dlgDims);
-
             if isempty(newName)
                 return;
             end
-
             names{sortOrder(listIx)} = newName{1};
-
             for iax = 1:ntAx
                 axinfo = get(tAx(iax),'UserData');
                 if axinfo.yes_add_user_events
@@ -438,18 +404,13 @@ hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
                     set(h_marker_name, 'String', newName{1})
 
                     h_tmarker_user_event(sortOrder(listIx)).UserData.UserData.name = newName{1};
-                    
+
                     axinfo.h_tmarker_user_event = h_tmarker_user_event;
                     set(tAx(iax),'UserData',axinfo);
                 end
             end
         end
     end
-
-
-
-
-
 % clear events button
 clearEventsButtonPos = [padL+buttonWidth*1/2 horiz_orig buttonWidth*1/2 buttonHeight];
 hbutton.clear_events = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
@@ -461,7 +422,6 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
     function clear_events(hObject,eventdata) % callback for h_button_clear_events
         clear_all_user_events(ntAx,tAx);
     end
-
 % bad trial button
 goodBGcolor = [0 0.9 0];
 badBGcolor = [0.9 0 0];
@@ -490,8 +450,6 @@ update_toggle_display;
             set(hbutton.bad_trial,'BackgroundColor',badBGcolor);
         end
     end
-
-% pre-emphasis:
 % pre-emphasis slider
 preemphSliderPos = [padL horiz_orig buttonWidth sliderHeight];
 hslider.preemph = uicontrol(p.guidata.buttonPanel,'Style','slider',...
@@ -502,7 +460,6 @@ hslider.preemph = uicontrol(p.guidata.buttonPanel,'Style','slider',...
     'Units','Normalized','Position',preemphSliderPos,...
     'Callback',@set_preemph);
 horiz_orig = horiz_orig + sliderHeight + padYSmall;
-
 % pre-emphasis edit
 preemphEditPos = [padL horiz_orig buttonWidth editHeight];
 hedit.preemph = uicontrol(p.guidata.buttonPanel,'Style','edit',...
@@ -511,7 +468,6 @@ hedit.preemph = uicontrol(p.guidata.buttonPanel,'Style','edit',...
     'FontUnits','Normalized','FontSize',editFontSize,...
     'TooltipString','Default of 0 includes Praat preemph');
 horiz_orig = horiz_orig + editHeight + padYSmall;
-
 % pre-emphasis text
 horiz_orig = horiz_orig - textPosYOffset;
 preemphTextPos = [padL horiz_orig buttonWidth textHeight];
@@ -528,8 +484,6 @@ last_sigproc_params.preemph = p.sigproc_params.preemph;
         set_alert4calcFx_if_true(last_sigproc_params.preemph ~= p.sigproc_params.preemph);
         calcFx(hObject,eventdata);
     end
-
-% gram color:
 % gram color: thresh gray slider
 threshGraySliderPos = [padL horiz_orig buttonWidth sliderHeight];
 hslider.thresh_gray = uicontrol(p.guidata.buttonPanel,'Style','slider',...
@@ -544,7 +498,6 @@ horiz_orig = horiz_orig + sliderHeight + padYSmall;
             my_colormap('my_gray',1,p.plot_params.thresh_gray,p.plot_params.max_gray);
         end
     end
-
 % gram color: max gray slider
 maxGraySliderPos = [padL horiz_orig buttonWidth sliderHeight];
 hslider.max_gray = uicontrol(p.guidata.buttonPanel,'Style','slider',...
@@ -553,7 +506,6 @@ hslider.max_gray = uicontrol(p.guidata.buttonPanel,'Style','slider',...
     'Units','Normalized','Position',maxGraySliderPos,...
     'Callback',@set_max_gray);
 horiz_orig = horiz_orig + sliderHeight + padYSmall;
-
 % gram color: text
 horiz_orig = horiz_orig - textPosYOffset;
 maxGrayTextPos = [padL horiz_orig buttonWidth textHeight];
@@ -569,14 +521,12 @@ horiz_orig = horiz_orig + textHeight + padYBig;
             my_colormap('my_gray',1,p.plot_params.thresh_gray,p.plot_params.max_gray);
         end
     end
-
 % ms framespec:
 n_framespecs = length(all_ms_framespecs.name);
 framespec_choice_str = cell(1,n_framespecs);
 for i_framespec = 1:n_framespecs
     framespec_choice_str{i_framespec} = sprintf('%.0f/%.1fms, %s',all_ms_framespecs.ms_frame(i_framespec),all_ms_framespecs.ms_frame_advance(i_framespec),all_ms_framespecs.name{i_framespec});
 end
-
 % ms framespec: gram dropdown
 if ~ischar(p.sigproc_params.ms_framespec_gram)
     error('sorry: we only support named ms_framespecs right now');
@@ -591,7 +541,6 @@ hdropdown.ms_framespec_gram = uicontrol(p.guidata.buttonPanel,'Style','popupmenu
     'FontUnits','Normalized','FontSize',dropdownFontSize,...
     'Callback',@set_ms_framespec_gram);
 horiz_orig = horiz_orig + dropdownHeight + padYSmall;
-
 % ms framespec: gram text
 horiz_orig = horiz_orig - tinyPosYOffset;
 msFramespecGramTextPos = [padL horiz_orig buttonWidth tinyHeight];
@@ -606,7 +555,6 @@ last_sigproc_params.ms_framespec_gram = p.sigproc_params.ms_framespec_gram;
         p.sigproc_params.ms_framespec_gram = all_ms_framespecs.name{get(hdropdown.ms_framespec_gram,'Value')};
         set_alert4calcFx_if_true(~strcmp(last_sigproc_params.ms_framespec_gram,p.sigproc_params.ms_framespec_gram));
     end
-
 % ms framespec: formant dropdown
 if ~ischar(p.sigproc_params.ms_framespec_form)
     error('sorry: we only support named ms_framespecs right now');
@@ -621,7 +569,6 @@ hdropdown.ms_framespec_form = uicontrol(p.guidata.buttonPanel,'Style','popupmenu
     'FontUnits','Normalized','FontSize',dropdownFontSize,...
     'Callback',@set_ms_framespec_form);
 horiz_orig = horiz_orig + dropdownHeight + padYSmall;
-
 % ms framespec: formant text
 horiz_orig = horiz_orig - tinyPosYOffset;
 msFramespecFormTextPos = [padL horiz_orig buttonWidth tinyHeight];
@@ -636,11 +583,10 @@ last_sigproc_params.ms_framespec_form = p.sigproc_params.ms_framespec_form;
         p.sigproc_params.ms_framespec_form = all_ms_framespecs.name{get(hdropdown.ms_framespec_form,'Value')};
         set_alert4calcFx_if_true(~strcmp(last_sigproc_params.ms_framespec_form ,p.sigproc_params.ms_framespec_form));
     end
-
 % nlpc dropdown
 nchoices = length(p.sigproc_params.nlpc_choices);
 for ichoice = 1:nchoices
-    nlpc_choice_strs{ichoice} = sprintf('%d',p.sigproc_params.nlpc_choices(ichoice)); %#ok<*AGROW> 
+    nlpc_choice_strs{ichoice} = sprintf('%d',p.sigproc_params.nlpc_choices(ichoice)); %#ok<*AGROW>
 end
 initial_dropdown_value = find(p.sigproc_params.nlpc_choices == p.sigproc_params.nlpc);
 if isempty(initial_dropdown_value), initial_dropdown_value = 1; end
@@ -652,7 +598,6 @@ hdropdown.nlpc = uicontrol(p.guidata.buttonPanel,'Style','popupmenu',...
     'FontUnits','Normalized','FontSize',dropdownFontSize,...
     'Callback',@set_nlpc_choice);
 horiz_orig = horiz_orig + dropdownHeight + padYSmall;
-
 % nlpc text
 horiz_orig = horiz_orig - textPosYOffset;
 nlpcTextPos = [padL horiz_orig buttonWidth textHeight];
@@ -667,7 +612,6 @@ last_sigproc_params.nlpc = p.sigproc_params.nlpc;
         p.sigproc_params.nlpc = p.sigproc_params.nlpc_choices(get(hdropdown.nlpc,'Value'));
         set_alert4calcFx_if_true(last_sigproc_params.nlpc ~= p.sigproc_params.nlpc)
     end
-
 % amplitude threshold edit
 amplThreshEditPos = [padL horiz_orig buttonWidth editHeight];
 hedit.ampl_thresh4voicing = uicontrol(p.guidata.buttonPanel,'Style','edit',...
@@ -676,7 +620,6 @@ hedit.ampl_thresh4voicing = uicontrol(p.guidata.buttonPanel,'Style','edit',...
     'FontUnits','Normalized','FontSize',editFontSize,...
     'Callback',@set_edit_ampl_thresh4voicing);
 horiz_orig = horiz_orig + editHeight + padYSmall;
-
 % amplitude threshold text
 horiz_orig = horiz_orig - textPosYOffset;
 amplThreshTextPos = [padL horiz_orig buttonWidth textHeight];
@@ -689,7 +632,6 @@ horiz_orig = horiz_orig + textHeight + padYBig;
     function set_edit_ampl_thresh4voicing(hObject,eventdata) % callback for hedit.ampl_thresh4voicing
         set_ampl_thresh4voicing(str2double(get(hedit.ampl_thresh4voicing,'String')));
     end
-
 last_sigproc_params.ampl_thresh4voicing = p.sigproc_params.ampl_thresh4voicing;
     function set_ampl_thresh4voicing(new_ampl_thresh4voicing)
         if ~isempty(new_ampl_thresh4voicing)
@@ -754,7 +696,6 @@ normal_bgcolor = get(hbutton.calc,'BackgroundColor');
 
 %% key press events
 marker_captured = 0;
-
     function key_press_func(src,event)
         the_ax = cur_ax_from_curpt(ntAx,tAx);
         the_axinfo = get(the_ax,'UserData');
@@ -795,8 +736,7 @@ marker_captured = 0;
                     fprintf('\n');
             end
         end
-        
-        
+
         function incdec_tmarker_spec(yes_inc,the_ax)
             the_axinfo = get(the_ax,'UserData');
             [t_low,t_spec,t_hi] = get_ax_tmarker_times(the_ax);
@@ -812,9 +752,6 @@ marker_captured = 0;
                     update_spec_ax(spec_ax,gram_ax);
             end
         end
-        
-        
- 
     end
 
 %% when figure is deleted
@@ -830,8 +767,6 @@ marker_captured = 0;
         is_good_trial = p.event_params.is_good_trial;
         p.event_params = viewer_end_state.wave_axinfo.p.event_params;
         p.event_params.is_good_trial = is_good_trial;
-        
-        
         viewer_end_state.sigproc_params = p.sigproc_params;
         viewer_end_state.plot_params = p.plot_params;
         viewer_end_state.event_params = p.event_params;
@@ -858,7 +793,7 @@ marker_captured = 0;
             move_tmarker2ax_curpt(cur_ax,h_captured_tmarker);
         end
     end
-     
+
     function release_tmarker(src,event)
         if marker_captured
             [t_low,t_spec,t_hi,t_user_events] = get_ax_tmarker_times(cur_ax);
@@ -894,7 +829,7 @@ marker_captured = 0;
         unheighten_iax(iax2heighten,tAx,ntAx);
     end
 
-    function fig_resize_func(src,event) 
+    function fig_resize_func(src,event)
         p.plot_params.figpos = get(hf,'Position');
         reposition_ax(tAx,ntAx);
     end
@@ -923,7 +858,6 @@ if row_y > 1
 end
 fs = p.sigproc_params.fs;
 name = p.plot_params.name;
-
 axdat{1} = y;
 params{1}.taxis = (0:(length(y)-1))/fs;
 params{1}.fs = fs;
@@ -969,7 +903,6 @@ wave_axinfo = get(wave_ax,'UserData');
 fs = wave_axinfo.params{1}.fs;
 y = wave_axinfo.dat{1};
 ampl_thresh4voicing = p.sigproc_params.ampl_thresh4voicing;
-
 if ~isempty(sigmat) && isfield(sigmat,'ampl')
     axdat{1} = sigmat.ampl;
     params{1}.fs = fs;
@@ -1057,11 +990,9 @@ y = wave_axinfo.dat{1};
 
 pitchlimits = p.sigproc_params.pitchlimits;
 ampl_thresh4voicing = p.sigproc_params.ampl_thresh4voicing;
-
 thresh4voicing_spec.ampl = ampl_axinfo.dat{1};
 thresh4voicing_spec.ampl_taxis = ampl_axinfo.params{1}.taxis;
 thresh4voicing_spec.ampl_thresh4voicing = ampl_thresh4voicing;
-
 if ~isempty(sigmat) && isfield(sigmat,'pitch')
     axdat{1} = sigmat.pitch;
     params{1}.fs = fs;
@@ -1086,7 +1017,6 @@ fs = wave_axinfo.params{1}.fs;
 y = wave_axinfo.dat{1};
 
 ampl_thresh4voicing = p.sigproc_params.ampl_thresh4voicing;
-
 thresh4voicing_spec.ampl = ampl_axinfo.dat{1};
 thresh4voicing_spec.ampl_taxis = ampl_axinfo.params{1}.taxis;
 thresh4voicing_spec.ampl_thresh4voicing = ampl_thresh4voicing;
@@ -1094,8 +1024,6 @@ thresh4voicing_spec.ampl_thresh4voicing = ampl_thresh4voicing;
 % include under if statement (only if params that affect pitch are changed)
 % if pitch params changed
 [axdat{1},params{1}] = make_pitch_axdat(y,fs,thresh4voicing_spec,p.sigproc_params);
-% end
-
 pitch_axinfo = get(pitch_ax,'UserData');
 pitch_axinfo.dat = axdat;
 pitch_axinfo.datlims = size(axdat{1});
@@ -1368,7 +1296,7 @@ range_axdat2 = max_axdat2 - min_axdat2;
 norm_axdat{2} = (axdat{2} - min_axdat2)/range_axdat2;
 
 haxlims = axis(hax);
-t_min = haxlims(1); t_max = haxlims(2); 
+t_min = haxlims(1); t_max = haxlims(2);
 dat4minmax = [norm_axdat{1} norm_axdat{2}];
 set_viewer_axlims(hax,t_min,t_max,dat4minmax);
 set(hply(1),'YData',norm_axdat{1}); set(hply(1),'Color','b');
@@ -1419,16 +1347,16 @@ switch axinfo.type
         spec_marker_name.name = ' %.3f s ';
         spec_marker_name.vert_align = 'top';
         spec_marker_name.bgrect.color = 'same';
-        
+
         hax.XTickLabel = [];
-        
+
     case 'gram'
         absS = axdat{1};
         gram_params = params{1};
         absS2plot = 20*log10(absS+fig_params.wave_viewer_logshim);
         hply(1) = imagesc(taxis,faxis,absS2plot);
         set(hax,'YDir','normal');
-        
+
         ftrack = axdat{2};
         ftrack_params = params{2};
         nformants = ftrack_params.nformants;
@@ -1440,13 +1368,13 @@ switch axinfo.type
             %set(hply(iformant+1),'Visible','off'); % RPK CHANGE DO NOT TRACK
         end
         hold off
-        
+
         titlstr = sprintf('spectrogram(%s): %.1f sec, %d frames',name,t_range,axinfo.datlims(2));
         hylab = ylabel('Hz');
         set_viewer_axlims(hax,t_min,t_max,hzbounds4plot,0);
         yes_tmarker_play = 0;
         yes_add_user_events = 1;
-        
+
         for iformant = 1:nformants
             spec_marker_name(iformant).name = ' %.0f Hz ';
             spec_marker_name(iformant).vert_align = 'top';
@@ -1455,9 +1383,9 @@ switch axinfo.type
             spec_marker_name(iformant).idatrows = iformant;
             spec_marker_name(iformant).bgrect.color = 'same';
         end
-        
+
         hax.XTickLabel = [];
-        
+
     case 'pitch'
         hply(1) = plot(taxis,axdat{1});
         titlstr = sprintf('pitch(%s): %.1f sec, %d samples',name,t_range,axinfo.datlims(2));
@@ -1469,9 +1397,9 @@ switch axinfo.type
         spec_marker_name.vert_align = 'top';
         spec_marker_name.idatsources = 1;
         spec_marker_name.bgrect.color = 'same';
-        
+
         hax.XTickLabel = [];
-        
+
     case 'ampl'
         hply(1) = plot(taxis,axdat{1});
         titlstr = sprintf('ampl(%s): %.1f sec, %d samples',name,t_range,axinfo.datlims(2));
@@ -1487,7 +1415,7 @@ switch axinfo.type
         % first, do some dummy plotting to create the hlpy's
         hply(1) = plot(taxis,axdat{1});
         hold on;
-%         hply(2) = plot(taxis,axdat{2});
+        %         hply(2) = plot(taxis,axdat{2});
         formant = params{2}.formants;
         nformants = length(formant);
         for iformant = 1:nformants
@@ -1497,13 +1425,13 @@ switch axinfo.type
         end
         set_viewer_axlims(hax,t_min,t_max,[0 1],0);
         hold off
-        
+
         % then do the real plotting
         update_spec_plots(hax,hply,axdat,params);
-        
+
         titlstr = 'you should never see this';
         hylab = ylabel('ampl');
-        
+
         yes_tmarker_play = 0;
         yes_add_user_events = 0;
         spec_marker_name.name = ' %.0f Hz ';
@@ -1565,9 +1493,8 @@ h_tmarker_low = make_tmarker(hax,'g-');
 update_tmarker(h_tmarker_low, t_min + fig_params.tmarker_init_border*t_range);
 h_tmarker_spec = make_tmarker(hax,'y-',spec_marker_name);
 update_tmarker(h_tmarker_spec, t_min + t_range/2);
-h_tmarker_hi = make_tmarker(hax,'r-'); 
+h_tmarker_hi = make_tmarker(hax,'r-');
 update_tmarker(h_tmarker_hi,  t_max - fig_params.tmarker_init_border*t_range);
-
 if yes_tmarker_play
     h_tmarker_play = make_tmarker(hax,'c-',[],[],0); update_tmarker(h_tmarker_play, t_min + fig_params.tmarker_init_border*t_range);
 else
@@ -1577,14 +1504,11 @@ axinfo.h_tmarker_low = h_tmarker_low;
 axinfo.h_tmarker_spec = h_tmarker_spec;
 axinfo.h_tmarker_hi  = h_tmarker_hi;
 axinfo.h_tmarker_play = h_tmarker_play;
-
 axinfo.t_llim = t_min;
 axinfo.t_hlim = t_max;
 end
 
-
 %% audioplayer callback functions
-
 function play_from_wave_ax(wave_ax)
 [start_player_t,duh,stop_player_t] = get_ax_tmarker_times(wave_ax);
 wave_axinfo = get(wave_ax,'UserData');
@@ -1609,7 +1533,6 @@ update_tmarker(h_tmarker_play,current_player_t);
 set(h_tmarker_play,'Visible','on');
 wave_axinfo.params{1}.player_started = 0;
 set(wave_ax,'UserData',wave_axinfo);
-% fprintf('player started\n');
 end
 
 function player_stop(hObject,eventdata)
@@ -1618,7 +1541,6 @@ wave_axinfo = get(wave_ax,'UserData');
 h_tmarker_play = wave_axinfo.h_tmarker_play;
 update_tmarker(h_tmarker_play,get_tmarker_time(wave_axinfo.h_tmarker_low));
 set(h_tmarker_play,'Visible','off');
-% fprintf('player stopped\n');
 end
 
 function player_runfunc(hObject,eventdata)
@@ -1641,11 +1563,9 @@ end
 wave_axinfo.params{1}.player_started = player_started;
 update_tmarker(wave_axinfo.h_tmarker_play,current_player_t);
 set(wave_ax,'UserData',wave_axinfo);
-% fprintf('player running(%d)\n',isamp_playing);
 end
 
 %% generic ax stuff
-
 function set_ax_i(ax,i)
 axinfo = get(ax,'UserData');
 axinfo.i = i;
@@ -1665,105 +1585,60 @@ new_t_spec = taxis(itaxis);
 if new_t_spec < t_low || new_t_spec > t_hi, new_t_spec = (t_low + t_hi)/2; end
 end
 
-function h_tmarker = make_tmarker(hax,linestyle,marker_name,line_width,yes_visible)
+function h_tmarker = make_tmarker(hax, linestyle, marker_name, line_width, yes_visible)
 fig_params = get_fig_params;
-if nargin < 3, marker_name = []; end
+
+if nargin < 3 || isempty(marker_name), marker_name = []; end % set defaults for parameters
 if nargin < 4 || isempty(line_width), line_width = fig_params.default_tmarker_width; end
-if nargin < 5 || isempty(yes_visible), yes_visible = 1; end
-xlims = get(hax,'XLim');
+if nargin < 5, yes_visible = true; end
+xlims = get(hax, 'XLim'); % x and y limits for markers
 t = xlims(1);
-tmarker_xdat = t*[1 1];
-tmarker_ydat = get(hax,'YLim');
-h_tmarker = plot(hax,tmarker_xdat,tmarker_ydat,linestyle);
-set(h_tmarker,'LineWidth',line_width);
-% if isempty(marker_name)
+tmarker_xdat = t * [1 1];
+tmarker_ydat = get(hax, 'YLim');
+h_tmarker = plot(hax, tmarker_xdat, tmarker_ydat, linestyle, 'LineWidth', line_width); % marker lines
+if isempty(marker_name) % marker name specifications
     h_marker_name = [];
- if strcmp(marker_name_spec.color,'same')
-            set(h_marker_name(i_marker_name),'Color',get(h_tmarker,'Color'));
-        else
-            set(h_marker_name(i_marker_name),'Color',marker_name_spec.color);
-        end
-        set(h_marker_name(i_marker_name),'UserData',marker_name_spec);
-        update_marker_name_bgrect(h_marker_name(i_marker_name));else
-% else
+else
     if ~isstruct(marker_name)
         marker_name_specs(1).name = marker_name;
     else
         marker_name_specs = marker_name;
     end
     n_marker_names = length(marker_name_specs);
-
- %TODO make all the markers load at once instead of individually 
-            hax=gca;
-            axes(hax);
-%          cur_hax = gca;
-%         axes(cur_hax); %FIXME this is slow!!!!
-    for i_marker_name = 1:n_marker_names
+    h_marker_name = gobjects(1, n_marker_names);
+    for i_marker_name = 1:n_marker_names % set each marker name spec
         marker_name_spec = marker_name_specs(i_marker_name);
-        set(h_tmarker,'UserData',h_marker_name);
-
-        if ~isfield(marker_name_spec,'name'), error('marker_name_spec must have a "name" field'); end
-        fields = {'vert_align', 'color', 'idatsources', 'idatrows', 'bgrect', 'iidatsource4ypos'};
-        fields_str = char(fields);
-        fprintf(fields_str) % see output to determine what regex to use 
-        defaultVals = {'bottom''', 'k''', 0, [], [], []};
-
-        
-            if ~isfield(marker_name_spec, strfind(fields_str, %FIXME use regexpPattern to find substrings divided by whitespace?, i)
-                marker_name_spec.fields{i} = defaultVals{i}; end
-            
-        
-
-%         if ~isfield(marker_name_spec,'vert_align'), marker_name_spec.vert_align = 'bottom'; end
-%         if ~isfield(marker_name_spec,'color'), marker_name_spec.color = 'k'; end
-%         if ~isfield(marker_name_spec,'idatsources'), marker_name_spec.idatsources = 0; end
-%         if ~isfield(marker_name_spec,'idatrows'), marker_name_spec.idatrows = []; end
-%         if ~isfield(marker_name_spec,'bgrect'), marker_name_spec.bgrect = []; end
-%         if ~isfield(marker_name_spec,'iidatsource4ypos'), marker_name_spec.iidatsource4ypos = []; end
-        marker_name_spec.h_tmarker = h_tmarker;
-        marker_name_str = get_marker_name_str(marker_name_spec,t);
-%         cur_hax = gca;
-%         axes(cur_hax); %FIXME this is slow!!!!
-        %FIXME, wave_viewer >> t_marker
-       %axes(hax);  % because the text() command only works with the current axes 
-
-        set(h_marker_name(i_marker_name),'VerticalAlignment',marker_name_spec.vert_align);
-        if strcmp(marker_name_spec.color,'same')
-            set(h_marker_name(i_marker_name),'Color',get(h_tmarker,'Color'));
-        else
-            set(h_marker_name(i_marker_name),'Color',marker_name_spec.color);
-        end
-
-         % Prepare text properties
-            text_props{i_marker_name} = {'String', marker_name_spec.name, ...
-                'Position', [t, tmarker_ydat(1), 0], ...
-                'VerticalAlignment', marker_name_spec.vert_align, ...
-                'Parent', hax};
-            
-            if strcmp(marker_name_spec.color, 'same')
-                text_props{i_marker_name} = [text_props{i_marker_name}, {'Color', get(h_tmarker, 'Color')}];
-            else
-                text_props{i_marker_name} = [text_props{i_marker_name}, {'Color', marker_name_spec.color}];
-            end
-        end
-        
-        % Create all text objects at once
-        h_marker_name = text(text_props{:});
-
-%         if ~isfield(marker_name_spec,'vert_align'), marker_name_spec.vert_align = 'bottom'; end
-%         if ~isfield(marker_name_spec,'color'), marker_name_spec.color = 'k'; end
-%         if ~isfield(marker_name_spec,'idatsources'), marker_name_spec.idatsources = 0; end
-%         if ~isfield(marker_name_spec,'idatrows'), marker_name_spec.idatrows = []; end
-%         if ~isfield(marker_name_spec,'bgrect'), marker_name_spec.bgrect = []; end
-%         if ~isfield(marker_name_spec,'iidatsource4ypos'), marker_name_spec.iidatsource4ypos = []; end
-      
+        marker_name_spec = set_missing_fields(marker_name_spec); % ensure specs exist
+        marker_name_str = get_marker_name_str(marker_name_spec, t);
+        % make-a-marker shenanigans
+        h_marker_name(i_marker_name) = text('String', marker_name_str, ...
+            'Position', [t, tmarker_ydat(2)], ...
+            'VerticalAlignment', marker_name_spec.vert_align, ...
+            'Color', get_color(marker_name_spec, h_tmarker), ...
+            'Parent', hax);
+        set(h_marker_name(i_marker_name), 'UserData', marker_name_spec);
+        update_marker_name_bgrect(h_marker_name(i_marker_name));
+    end
 end
-set(h_tmarker,'UserData',h_marker_name);
-if ~yes_visible, set(h_tmarker,'Visible','off'); end
+set(h_tmarker, 'UserData', h_marker_name);
+if ~yes_visible, set(h_tmarker, 'Visible', 'off'); end
 end
 
-function hax_axes()
-    axes(hax); %FIXME this is slow!!!!
+function marker_name_spec = set_missing_fields(marker_name_spec) % set default vals
+if ~isfield(marker_name_spec, 'vert_align'), marker_name_spec.vert_align = 'bottom'; end
+if ~isfield(marker_name_spec, 'color'), marker_name_spec.color = 'k'; end
+if ~isfield(marker_name_spec, 'idatsources'), marker_name_spec.idatsources = 0; end
+if ~isfield(marker_name_spec, 'idatrows'), marker_name_spec.idatrows = []; end
+if ~isfield(marker_name_spec, 'bgrect'), marker_name_spec.bgrect = []; end
+if ~isfield(marker_name_spec, 'iidatsource4ypos'), marker_name_spec.iidatsource4ypos = []; end
+end
+
+function color = get_color(marker_name_spec, h_tmarker)
+if strcmp(marker_name_spec.color, 'same')
+    color = get(h_tmarker, 'Color');
+else
+    color = marker_name_spec.color;
+end
 end
 
 function update_tmarker(h_tmarker,t)
@@ -1798,7 +1673,7 @@ end
 end
 
 function marker_name_str = get_marker_name_str(marker_name_spec,t)
-if any(marker_name_spec.name=='%') % is marker name a format string?
+if any(marker_name_spec.name=='%')
     datsources = get_marker_name_datsources(marker_name_spec,t);
     marker_name_str = sprintf(marker_name_spec.name,datsources{:});
 else
@@ -1874,7 +1749,6 @@ t_user_events = [];
 for i = 1:length(axinfo.h_tmarker_user_event)
     t_user_events(i) = get_tmarker_time(axinfo.h_tmarker_user_event(i));
 end
-
 end
 
 function update_ax_tmarkers(ax,t_low,t_spec,t_hi,t_user_events)
@@ -1883,7 +1757,6 @@ axinfo = get(ax,'UserData');
 update_tmarker(axinfo.h_tmarker_low,t_low);
 update_tmarker(axinfo.h_tmarker_spec,t_spec);
 update_tmarker(axinfo.h_tmarker_hi,t_hi);
-
 nevents = axinfo.nevents;
 if nevents
     h_tmarker_event = axinfo.h_tmarker_event;
@@ -1895,7 +1768,7 @@ end
 n_user_events = axinfo.n_user_events;
 if n_user_events && ~isempty(t_user_events)
     h_tmarker_user_event = axinfo.h_tmarker_user_event;
-    user_event_times = axinfo.p.event_params.user_event_times;
+    %     user_event_times = axinfo.p.event_params.user_event_times; %FIXME relevant?
     for ievent = 1:n_user_events
         update_tmarker(h_tmarker_user_event(ievent),t_user_events(ievent));
     end
@@ -1925,7 +1798,6 @@ if axinfo.yes_add_user_events
             user_event_names = axinfo.p.event_params.user_event_names;
             user_event_times = axinfo.p.event_params.user_event_times;
             h_tmarker_user_event = axinfo.h_tmarker_user_event;
-            
             n_prior_names = n_user_events - 1;
             for i_event_name = 1:n_user_events
                 user_event_name = sprintf('%s%d',axinfo.p.event_params.user_event_name_prefix,i_event_name);
@@ -1948,7 +1820,6 @@ if axinfo.yes_add_user_events
             end
             update_tmarker(h_tmarker_user_event(n_user_events),t);
             move2front(ax(iax),axinfo.h_tmarker_spec);
-            
             axinfo.n_user_events = n_user_events;
             axinfo.p.event_params.user_event_names = user_event_names;
             axinfo.p.event_params.user_event_times = user_event_times;
@@ -1965,9 +1836,8 @@ for iax = 1:nax
     if axinfo.yes_add_user_events
         n_user_events = axinfo.n_user_events;
         for i_event = 1:n_user_events
-            axinfo.p.event_params.user_event_times(i_event) = t_user_events(i_event);  
+            axinfo.p.event_params.user_event_times(i_event) = t_user_events(i_event);
         end
-
         set(ax(iax),'UserData',axinfo);
     end
 end
@@ -1990,7 +1860,6 @@ if axinfo.yes_add_user_events
                 user_event_names = axinfo.p.event_params.user_event_names;
                 user_event_times = axinfo.p.event_params.user_event_times;
                 h_tmarker_user_event = axinfo.h_tmarker_user_event;
-                
                 user_event_names(ievent2del) = [];
                 user_event_times(ievent2del) = [];
                 h_marker_name = get(h_tmarker_user_event(ievent2del),'UserData');
@@ -1998,7 +1867,6 @@ if axinfo.yes_add_user_events
                 delete(h_tmarker_user_event(ievent2del));
                 h_tmarker_user_event(ievent2del) = [];
                 n_user_events = n_user_events - 1;
-                
                 axinfo.n_user_events = n_user_events;
                 axinfo.p.event_params.user_event_names = user_event_names;
                 axinfo.p.event_params.user_event_times = user_event_times;
@@ -2055,16 +1923,7 @@ function h_captured_tmarker = capture_ax_tmarker(ax)
 axinfo = get(ax,'UserData');
 cp = get(ax,'CurrentPoint');
 t_pos = cp(1,1);
-[t_tmarker_low,t_tmarker_spec,t_tmarker_hi,t_tuser_events] = get_ax_tmarker_times(ax); 
-% absdiff_tmarker(1) = abs(t_pos - t_tmarker_low);
-% absdiff_tmarker(2) = abs(t_pos - t_tmarker_spec);
-% absdiff_tmarker(3)  = abs(t_pos - t_tmarker_hi);
-% [duh,imin_tmarker] = min(absdiff_tmarker);
-% switch imin_tmarker
-%     case 1, h_captured_tmarker = axinfo.h_tmarker_low;
-%     case 2, h_captured_tmarker = axinfo.h_tmarker_spec;
-%     case 3, h_captured_tmarker = axinfo.h_tmarker_hi;
-% end
+[t_tmarker_low,t_tmarker_spec,t_tmarker_hi,t_tuser_events] = get_ax_tmarker_times(ax);
 absdiff_tmarker(1) = abs(t_pos - t_tmarker_low);
 absdiff_tmarker(2)  = abs(t_pos - t_tmarker_hi);
 for i = 1:length(t_tuser_events)
@@ -2121,17 +1980,16 @@ axinfo = get(ax,'UserData');
 t_tmarker_range = t_tmarker_hi - t_tmarker_low;
 new_t_low = t_tmarker_low - fig_params.tmarker_init_border*t_tmarker_range;
 new_t_hi  = t_tmarker_hi  + fig_params.tmarker_init_border*t_tmarker_range;
-
 if any(ax == tAx)
     for i = 1:length(tAx)
         new_ax_tlims(tAx(i),new_t_low,new_t_hi);
     end
 else
-     for i = 1:length(fAx)
+    for i = 1:length(fAx)
         new_ax_tlims(fAx(i),new_t_low,new_t_hi);
-     end
+    end
 end
-    
+
 if t_tmarker_spec < new_t_low || t_tmarker_spec > new_t_hi
     update_tmarker(axinfo.h_tmarker_spec,(new_t_low + new_t_hi)/2);
 else
@@ -2139,14 +1997,13 @@ else
 end
 end
 
-function expand_btw_ax_uev(ax,tAx,fAx) 
+function expand_btw_ax_uev(ax,tAx,fAx)
 [~,t_spec,~,t_user_events] = get_ax_tmarker_times(ax);
-
 fig_params = get_fig_params;
 if length(t_user_events) >= 2
     tmarker_buffer = 0.05;
-    t_low = min(t_user_events) - tmarker_buffer; 
-    t_hi = max(t_user_events) + tmarker_buffer; 
+    t_low = min(t_user_events) - tmarker_buffer;
+    t_hi = max(t_user_events) + tmarker_buffer;
 elseif length(t_user_events) == 1
     tmarker_buffer = 0.2;
     t_low = t_user_events(1) - tmarker_buffer;
@@ -2162,10 +2019,9 @@ else
     t_low = tAx_info{3}.params{2}.taxis(f1_first) - tmarker_buffer;
     t_hi  = tAx_info{3}.params{2}.taxis(f1_last)  + tmarker_buffer;
 end
-
-    %CWN 4/2020 -- The alignment checking in the next 19 lines could be
-    %modularized and called whenever the time markers move. For now, just
-    %calling it locally in the expand_btw_ax_uev function.
+%CWN 4/2020 -- The alignment checking in the next 19 lines could be
+%modularized and called whenever the time markers move. For now, just
+%calling it locally in the expand_btw_ax_uev function.
 %finds proper axis boundaries and tmarker times
 tAx_latest_start_time = intmin;
 tAx_earliest_end_time = intmax;
@@ -2200,10 +2056,8 @@ else
         update_ax_tmarkers(fAx(i),t_low,t_spec,t_hi,t_user_events);
     end
 end
-
 %adjust the axes' boundaries
 expand_btw_ax_tmarkers(ax,tAx,fAx)
-
 end
 
 function widen_ax_view(ax,tAx,fAx)
@@ -2214,15 +2068,14 @@ cur_thi  = cur_tlims(2);
 cur_trange = cur_thi - cur_tlow;
 new_t_low = cur_tlow - 0.5*cur_trange;
 new_t_hi = cur_thi + 0.5*cur_trange;
-
 if any(ax == tAx)
     for i = 1:length(tAx)
         new_ax_tlims(tAx(i),new_t_low,new_t_hi);
     end
 else
-     for i = 1:length(fAx)
+    for i = 1:length(fAx)
         new_ax_tlims(fAx(i),new_t_low,new_t_hi);
-     end
+    end
 end
 end
 
@@ -2362,18 +2215,15 @@ if ~iax_found, error('could not find the_ax in ax list'); end
 end
 
 %% generic wavefig stuff
-
 function set_viewer_axlims(hax,t_min,t_max,dat4minmax,yax_fact2use)
 fig_params = get_fig_params;
 if nargin < 5 || isempty(yax_fact2use), yax_fact2use = fig_params.yax_fact; end
-
 if ~any(~isnan(dat4minmax))
     y_low = 0; y_hi = 1;
 else
     y_low = min(dat4minmax); y_hi  = max(dat4minmax);
 end
 y_range = y_hi - y_low; if y_range == 0, y_range = 1; end
-
 axis(hax,[t_min t_max (y_low-yax_fact2use*y_range) (y_hi +yax_fact2use*y_range)]);
 end
 
@@ -2411,7 +2261,7 @@ sigproc_params = struct('fs', 11025, ...
     'pitchlimits', [75 300], ...
     'ampl_thresh4voicing', 0, ...
     'nlpc_choices', 7:20, ...
-    'preemph_range', [-2 3], ... 
+    'preemph_range', [-2 3], ...
     'ptrack_method','praat', ...
     'ptrack_max_candidates', 15, ...
     'ptrack_pitch_very_accurate_checkbox', 'no', ...
@@ -2425,9 +2275,7 @@ end
 
 %% get figure params (used to be global vars)
 function [fig_params] = get_fig_params()
-
 fig_params.formant_colors = {'b','r','g','k','c','m'}; % colors for more formants than you'll ever use
-
 fig_params.yax_fact = 0.05;
 fig_params.tmarker_init_border = 0.025;
 
