@@ -1587,7 +1587,6 @@ end
 
 function h_tmarker = make_tmarker(hax, linestyle, marker_name, line_width, yes_visible)
 fig_params = get_fig_params;
-
 if nargin < 3 || isempty(marker_name), marker_name = []; end % set defaults for parameters
 if nargin < 4 || isempty(line_width), line_width = fig_params.default_tmarker_width; end
 if nargin < 5, yes_visible = true; end
@@ -1596,14 +1595,16 @@ t = xlims(1);
 tmarker_xdat = t * [1 1];
 tmarker_ydat = get(hax, 'YLim');
 h_tmarker = plot(hax, tmarker_xdat, tmarker_ydat, linestyle, 'LineWidth', line_width); % marker lines
+if ~yes_visible, set(h_tmarker, 'Visible', 'off'); end
 if isempty(marker_name) % marker name specifications
-    h_marker_name = [];
+    h_marker_name = set_marker_name(marker_name, h_tmarker, hax, tmarker_ydat);
 else
-    if ~isstruct(marker_name)
+    if ~isstruct(marker_name) %TODO figure out why this is so important
         marker_name_specs(1).name = marker_name;
     else
         marker_name_specs = marker_name;
     end
+end
     n_marker_names = length(marker_name_specs);
     h_marker_name = gobjects(1, n_marker_names);
     for i_marker_name = 1:n_marker_names % set each marker name spec
@@ -1618,8 +1619,8 @@ else
             'Parent', hax);
         set(h_marker_name(i_marker_name), 'UserData', marker_name_spec);
         update_marker_name_bgrect(h_marker_name(i_marker_name));
-    end
-end
+    end    
+%TODO h_tmarker shenanigans
 set(h_tmarker, 'UserData', h_marker_name);
 if ~yes_visible, set(h_tmarker, 'Visible', 'off'); end
 end
@@ -1631,6 +1632,7 @@ if ~isfield(marker_name_spec, 'idatsources'), marker_name_spec.idatsources = 0; 
 if ~isfield(marker_name_spec, 'idatrows'), marker_name_spec.idatrows = []; end
 if ~isfield(marker_name_spec, 'bgrect'), marker_name_spec.bgrect = []; end
 if ~isfield(marker_name_spec, 'iidatsource4ypos'), marker_name_spec.iidatsource4ypos = []; end
+%TODO h_tmarker shenanigans
 end
 
 function color = get_color(marker_name_spec, h_tmarker)
@@ -1707,6 +1709,7 @@ for ii = 1:ndatsources
 end
 end
 
+%TODO define marker_name_spec.h_tmarker before this function
 function update_marker_name_bgrect(h_marker_name)
 marker_name_spec = get(h_marker_name,'UserData');
 if ~isempty(marker_name_spec.bgrect)
@@ -1718,7 +1721,7 @@ if ~isempty(marker_name_spec.bgrect)
     end
     bgrect_color = marker_name_spec.bgrect.color;
     if strcmp(bgrect_color,'same')
-        h_tmarker = marker_name_spec.h_tmarker;
+        h_tmarker = marker_name_spec.h_tmarker; %FIXME
         bgrect_color = get(h_tmarker,'Color');
     end
     if ~isfield(marker_name_spec.bgrect,'h') || isempty(marker_name_spec.bgrect.h)
@@ -1732,6 +1735,18 @@ if ~isempty(marker_name_spec.bgrect)
     end
 end
 set(h_marker_name,'UserData',marker_name_spec);
+end
+
+%FIXME
+function h_marker_name = set_marker_name(marker_name, h_tmarker, hax, tmarker_ydat);
+     marker_name_str = get_marker_name_str(marker_name_spec, tmarker_ydat);
+     cur_hax = gca; % get current axes
+     axes(hax);
+     h_marker_name = text(tmarker_xdat(1), tmarker_ydat(2), marker_name_str, 'VerticalAlignment', marker_name_spec.vert_align, 'Color', marker_name_spec.color);
+     axes(cur_hax); % retrieve original axes
+    % update bg if needed
+    update_marker_name_bgrect(h_marker_name);
+    set(h_marker_name, 'UserData', marker_name_spec);
 end
 
 function t = get_tmarker_time(h_tmarker)
