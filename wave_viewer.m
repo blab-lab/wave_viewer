@@ -172,10 +172,15 @@ p.guidata.taxesPanel = uipanel(p.guidata.f,'Units','Normalized',...
 
 %% axes
 % create new axes
+persistent wave_ax;
 wave_ax = new_wave_ax(y,p);
+persistent ampl_ax;
 ampl_ax = new_ampl_ax(wave_ax,p,sigmat);
+persistent pitch_ax;
 pitch_ax = new_pitch_ax(wave_ax,ampl_ax,p,sigmat);
+persistent gram_ax;
 gram_ax = new_gram_ax(wave_ax,ampl_ax,p,sigmat);
+persistent spec_ax;
 spec_ax = new_spec_ax(gram_ax,p);
 
 update_wave_ax_tlims_from_gram_ax(wave_ax,gram_ax);
@@ -1158,7 +1163,7 @@ end
 
 % create gram ax in taxesPanel
 gram_ax = axes(p.guidata.taxesPanel);
-axinfo = new_axinfo('gram',params{1}.taxis,params{1}.faxis,axdat,gram_ax,hzbounds4plot,wave_axinfo.name,params{1}.taxis(1),params{1}.taxis(end),params,wave_axinfo.p);
+axinfo = new_axinfo('gram',params{1}.taxis,params{1}.faxis,axdat,gram_ax, hzbounds4plot, wave_axinfo.name,params{1}.taxis(1), params{1}.taxis(end),params,wave_axinfo.p);
 set(gram_ax,'UserData',axinfo);
 
 % hide formants
@@ -1657,6 +1662,7 @@ new_t_spec = taxis(itaxis);
 if new_t_spec < t_low || new_t_spec > t_hi, new_t_spec = (t_low + t_hi)/2; end
 end
 
+% TODO if isempty set ue, want all ue to load at once
 function h_tmarker = make_tmarker(hax,linestyle,marker_name,line_width,yes_visible)
 fig_params = get_fig_params;
 if nargin < 3, marker_name = []; end
@@ -1669,7 +1675,7 @@ tmarker_ydat = get(hax,'YLim');
 h_tmarker = plot(hax,tmarker_xdat,tmarker_ydat,linestyle);
 set(h_tmarker,'LineWidth',line_width);
 if isempty(marker_name)
-    h_marker_name = [];
+    h_marker_name = load_mname_specs();
 else
     if ~isstruct(marker_name)
         marker_name_specs(1).name = marker_name;
@@ -1688,10 +1694,10 @@ else
         if ~isfield(marker_name_spec,'iidatsource4ypos'), marker_name_spec.iidatsource4ypos = []; end
         marker_name_spec.h_tmarker = h_tmarker;
         marker_name_str = get_marker_name_str(marker_name_spec,t);
-        cur_hax = gca;
+%         cur_hax = gca;
         axes(hax);  % because the text() command only works with the current axes 
         h_marker_name(i_marker_name) = text(t,tmarker_ydat(2),marker_name_str);
-        axes(cur_hax);
+%         axes(cur_hax);
         set(h_marker_name(i_marker_name),'VerticalAlignment',marker_name_spec.vert_align);
         if strcmp(marker_name_spec.color,'same')
             set(h_marker_name(i_marker_name),'Color',get(h_tmarker,'Color'));
@@ -1704,6 +1710,11 @@ else
 end
 set(h_tmarker,'UserData',h_marker_name);
 if ~yes_visible, set(h_tmarker,'Visible','off'); end
+end
+
+function load_mname_specs()
+    % TODO retrieve specs and then (in func h_tmarker) load properties for ue
+    % refer to datsources?
 end
 
 function update_tmarker(h_tmarker,t)
