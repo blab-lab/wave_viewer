@@ -26,7 +26,8 @@ else
       rampvec = [linspace(1-max_gray,1,64-ithresh) ones(1,ithresh)]';
       c = [rampvec rampvec rampvec];
       colormap(c);
-      caxis([0 1]);
+      clim([0 1]); 
+      % caxis([0 1]); % original 
     otherwise
       colormap(cmap_spec);
   end

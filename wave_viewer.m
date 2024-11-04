@@ -177,6 +177,7 @@ wave_ax = new_wave_ax(y,p);
 ampl_ax = new_ampl_ax(wave_ax,p,sigmat);
 pitch_ax = new_pitch_ax(wave_ax,ampl_ax,p,sigmat);
 gram_ax = new_gram_ax(wave_ax,ampl_ax,p,sigmat);
+my_colormap('my_gray',1,p.plot_params.thresh_gray,p.plot_params.max_gray); % RK this makes contrast higher right off the bat
 spec_ax = new_spec_ax(gram_ax,p);
 
 update_wave_ax_tlims_from_gram_ax(wave_ax,gram_ax);
@@ -188,7 +189,7 @@ ntAx = ntAx + 1; tAx(ntAx) = ampl_ax; set_ax_i(ampl_ax,ntAx); % And 2/4 are toge
 ntAx = ntAx + 1; tAx(ntAx) = gram_ax; set_ax_i(gram_ax,ntAx-1); % tAx (3) is the spectrogram (second) 
 ntAx = ntAx + 1; tAx(ntAx) = wave_ax; set_ax_i(wave_ax,ntAx-2); %tAx(4) is the wave (on top) 
 if ~isempty(p.plot_params.axfracts)
-    set_axfracts(tAx,2,p.plot_params.axfracts);
+    set_axfracts(tAx,4,p.plot_params.axfracts);
     reposition_ax(tAx(1:2), 2); %reposition_ax(tAx,ntAx); % TKTK RK CHANGE
     reposition_ax(tAx(3:4), 2); 
 else
@@ -751,7 +752,7 @@ normal_bgcolor = get(hbutton.calc,'BackgroundColor');
 marker_captured = 0;
 
     function key_press_func(src,event)
-        the_ax = cur_ax_from_curpt(ntAx,tAx);
+        [the_ax, the_ax_pair] = cur_ax_from_curpt(ntAx,tAx);
         the_axinfo = get(the_ax,'UserData');
         if ~isempty(the_ax) && ~isempty(the_axinfo.h_tmarker_low)
             switch(event.Key)
@@ -775,9 +776,11 @@ marker_captured = 0;
                 case 'f' % toggle show/hide formants
                     toggle_formants;
                 case 'h' % heighten
-                    heighten_ax(the_ax);
+                    heighten_ax(the_ax); 
+                    heighten_ax(the_ax_pair); 
                 case 'u' % unheighten = reduce
                     unheighten_ax(the_ax);
+                    unheighten_ax(the_ax_pair); 
                 case 'c' % shortcut for "continue" button
                     contprogram([],[]);
                 case 't'
@@ -838,9 +841,9 @@ marker_captured = 0;
         marker_captured = 0;
         switch(get(src,'SelectionType'))
             case 'normal'
-                cur_ax = cur_ax_from_curpt(ntAx,tAx);
+                [cur_ax, cur_ax_pair] = cur_ax_from_curpt(ntAx,tAx); % RK TKTKTK 
                 if isempty(cur_ax)
-                    cur_ax = cur_ax_from_curpt(nfAx,fAx);
+                    [cur_ax, cur_ax_pair] = cur_ax_from_curpt(nfAx,fAx);
                 end
                 cur_axinfo = get(cur_ax,'UserData');
                 if ~isempty(cur_ax) && ~isempty(cur_axinfo.h_tmarker_low)
@@ -876,10 +879,10 @@ marker_captured = 0;
     end
 
     function set_current_ax(src,event)
-        cur_ax = cur_ax_from_curpt(ntAx,tAx);
+        [cur_ax, pair_ax] = cur_ax_from_curpt(ntAx,tAx); %RK TKTKTK
     end
 
-    function heighten_ax(ax2heighten)
+    function heighten_ax(ax2heighten) 
         iax2heighten = get_iax(ax2heighten,tAx,ntAx);
         heighten_iax(iax2heighten,tAx,ntAx);
     end
@@ -1141,7 +1144,7 @@ end
 
 if yes_gray, my_colormap('my_gray',1,thresh_gray,max_gray); end
 
-[axdat{1},params{1}] = make_spectrogram_axdat(y,fs,ms_framespec_gram,nfft,preemph,p.sigproc_params.ftrack_method);
+[axdat{1},params{1}] = make_spectrogram_axdat(y,fs,ms_framespec_gram,nfft,preemph,p.sigproc_params.ftrack_method,p);
 thresh4voicing_spec.ampl = ampl_axinfo.dat{1};
 thresh4voicing_spec.ampl_taxis = ampl_axinfo.params{1}.taxis;
 thresh4voicing_spec.ampl_thresh4voicing = ampl_thresh4voicing;
@@ -1197,7 +1200,7 @@ else
     ftrack_method = 'praat';
 end
 
-[axdat{1},params{1}] = make_spectrogram_axdat(y,fs,ms_framespec_gram,nfft,preemph,p.sigproc_params.ftrack_method);
+[axdat{1},params{1}] = make_spectrogram_axdat(y,fs,ms_framespec_gram,nfft,preemph,p.sigproc_params.ftrack_method,p);
 thresh4voicing_spec.ampl = ampl_axinfo.dat{1};
 thresh4voicing_spec.ampl_taxis = ampl_axinfo.params{1}.taxis;
 thresh4voicing_spec.ampl_thresh4voicing = ampl_thresh4voicing;
@@ -1230,7 +1233,7 @@ update_tmarker(gram_axinfo.h_tmarker_hi,[]);
 set(gram_ax,'UserData',gram_axinfo);
 end
 
-function [the_axdat,the_params] = make_spectrogram_axdat(y,fs,ms_framespec,nfft,preemph,ftrack_method)
+function [the_axdat,the_params] = make_spectrogram_axdat(y,fs,ms_framespec,nfft,preemph,ftrack_method,p)
 if strcmp(ftrack_method, 'praat')
     preemph4display = preemph + 0.95;
 else
@@ -1247,6 +1250,7 @@ the_params.nfft = nfft;
 the_params.preemph = preemph;
 the_params.faxis = faxis_gram;
 the_params.taxis = frame_taxis_gram;
+my_colormap('my_gray',1,p.plot_params.thresh_gray,p.plot_params.max_gray);
 end
 
 function [the_axdat,the_params] = make_ftrack_axdat(y,fs,faxis,ms_framespec,nlpc,preemph,nformants,thresh4voicing_spec,ftrack_method)
@@ -1976,17 +1980,33 @@ for iax = 1:nax
 end
 end
 
-function cur_ax = cur_ax_from_curpt(nax,ax)
+% RK changing so that pairs of axes are always changed together 
+function [cur_ax, pair_ax] = cur_ax_from_curpt(nax,ax)
 cur_ax_found = 0;
+pair_ax_found = 0; 
 for iax = 1:nax
     the_ax = ax(iax);
     if ax_has_current_point(the_ax)
         cur_ax_found = 1;
         cur_ax = the_ax;
+        % "Paired" axis. 
+        if iax == 1
+            % waveform is 1, amp is 3 (paired left/right). 
+            pair_ax = 3; 
+        elseif iax == 2
+            % spec/formants is 4, pitch if 4 (paired left/right) 
+            pair_ax = 4; 
+        elseif iax == 3
+            pair_ax = 1; 
+        elseif iax == 4
+            pair_ax = 2; 
+        end
+        pair_ax_found = 1; 
         break;
     end
 end
 if ~cur_ax_found, cur_ax = []; end
+if ~pair_ax_found, pair_ax = []; end
 end
 
 function yes_has_current_point = ax_has_current_point(ax)
