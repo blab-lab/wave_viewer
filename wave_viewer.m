@@ -1689,9 +1689,11 @@ else
         marker_name_spec.h_tmarker = h_tmarker;
         marker_name_str = get_marker_name_str(marker_name_spec,t);
         cur_hax = gca;
-        axes(hax);  % because the text() command only works with the current axes 
-        h_marker_name(i_marker_name) = text(t,tmarker_ydat(2),marker_name_str);
-        axes(cur_hax);
+ 
+%          axes(hax);  % because the text() command only works with the current axes 
+        h_marker_name(i_marker_name) = text(hax,t,tmarker_ydat(2),marker_name_str); % text(hax,...) updates axes automatically
+%         axes(cur_hax);
+
         set(h_marker_name(i_marker_name),'VerticalAlignment',marker_name_spec.vert_align);
         if strcmp(marker_name_spec.color,'same')
             set(h_marker_name(i_marker_name),'Color',get(h_tmarker,'Color'));
@@ -1705,6 +1707,7 @@ end
 set(h_tmarker,'UserData',h_marker_name);
 if ~yes_visible, set(h_tmarker,'Visible','off'); end
 end
+
 
 function update_tmarker(h_tmarker,t)
 if isempty(t)
