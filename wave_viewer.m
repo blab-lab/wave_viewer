@@ -14,7 +14,6 @@ p.event_params = get_event_params;
 all_ms_framespecs = get_all_ms_framespecs();
 
 %% set options from command line
-
 param_struct_names = fieldnames(p);
 n_param_structs = length(param_struct_names);
 
@@ -491,8 +490,8 @@ hslider.preemph = uicontrol(p.guidata.buttonPanel,'Style','slider',...
     'Max',p.sigproc_params.preemph_range(2),...
     'SliderStep', [0.01 0.1],...
     'Value',p.sigproc_params.preemph, ...
-    'Units','Normalized','Position',preemphSliderPos,...
-    'Callback',@set_preemph);
+    'Units','Normalized','Position',preemphSliderPos, ...
+    'Callback', @set_preemph);
 horiz_orig = horiz_orig + sliderHeight + padYSmall;
 
 % pre-emphasis edit
@@ -501,7 +500,8 @@ hedit.preemph = uicontrol(p.guidata.buttonPanel,'Style','edit',...
     'String',p.sigproc_params.preemph, ...
     'Units','Normalized','Position',preemphEditPos,...
     'FontUnits','Normalized','FontSize',editFontSize,...
-    'TooltipString','Default of 0 includes Praat preemph');
+    'TooltipString','Default of 0 includes Praat preemph', ...
+    'Callback', @preemph_text);
 horiz_orig = horiz_orig + editHeight + padYSmall;
 
 % pre-emphasis text
@@ -514,11 +514,23 @@ htext.preemph = uicontrol(p.guidata.buttonPanel,'Style','text',...
 uistack(htext.preemph,'bottom'); % move to bottom
 horiz_orig = horiz_orig + textHeight + padYBig;
 last_sigproc_params.preemph = p.sigproc_params.preemph;
-    function set_preemph(hObject,eventdata) % callback for h_slider_preemph
+    function set_preemph(hObject,~) % callback for h_slider_preemph
         p.sigproc_params.preemph = get(hObject, 'Value');
         set(hedit.preemph,'String',p.sigproc_params.preemph);
         set_alert4calcFx_if_true(last_sigproc_params.preemph ~= p.sigproc_params.preemph);
-        calcFx(hObject,eventdata);
+        calcFx();
+    end
+    function preemph_text(hObject, ~) % callback for pre-emph text box
+        textval = str2double(get(hObject, 'String'));
+        if ~isnan(textval)
+            p.sigproc_params.preemph = textval;
+            set(hslider.preemph, 'Value', textval); % updates slider position
+            set_alert4calcFx_if_true(last_sigproc_params.preemph ~= p.sigproc_params.preemph);
+            calcFx();
+        else
+            set(hedit.preemph, num2str(p.sigproc_params.preemph));
+            disp('Please enter a valid number.');
+        end
     end
 
 % gram color:
