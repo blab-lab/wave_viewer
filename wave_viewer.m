@@ -136,7 +136,7 @@ panelFontSize = .1;
 % create panel for buttons
 buttonPanelXPos = panelPad;
 buttonPanelYPos = panelPad;
-buttonPanelXSpan = 0.1;
+buttonPanelXSpan = 0.2;
 buttonPanelYSpan = 1 - panelPad*2;
 buttonPanelPos = [buttonPanelXPos buttonPanelYPos buttonPanelXSpan buttonPanelYSpan];
 p.guidata.buttonPanel = uipanel(p.guidata.f,'Units','Normalized',...
@@ -982,6 +982,7 @@ else
     [axdat{1},params{1}] = make_ampl_axdat(y,fs);
 end
 
+% TODO figure out what's going on here
 % create ampl ax in taxesPanel
 ampl_ax = axes(p.guidata.taxesPanel);
 axinfo = new_axinfo('ampl',params{1}.taxis,[],axdat,ampl_ax,[],wave_axinfo.name,params{1}.taxis(1),params{1}.taxis(end),params,wave_axinfo.p);
@@ -1015,6 +1016,8 @@ update_tmarker(ampl_axinfo.h_tmarker_low,[]);
 update_tmarker(ampl_axinfo.h_tmarker_spec,[]);
 update_tmarker(ampl_axinfo.h_tmarker_hi,[]);
 set(ampl_ax,'UserData',ampl_axinfo);
+% set(ampl_ax, 'LineStyle', '--'); FIXME: remove this but keep
+% adding/removing to try to identify where the problem is occurring
 end
 
 function [the_axdat,the_params] = make_ampl_axdat(y,fs)
@@ -1026,6 +1029,7 @@ the_params.fs = fs;
 the_params.taxis = ampl_taxis;
 end
 
+% updates ampl voicing line (avg/trial)
 function  hl_ampl_thresh4voicing = set_ampl_thresh4voicing_line(ampl_thresh4voicing,ampl_axinfo,old_hl_ampl_thresh4voicing)
 ylim = get(ampl_axinfo.h,'YLim');
 if ylim(1) <= ampl_thresh4voicing && ampl_thresh4voicing < ylim(2)
@@ -1329,6 +1333,7 @@ spec_axinfo.params = params;
 
 update_spec_plots(spec_axinfo.h,spec_axinfo.hply,axdat,params);
 
+% TODO f1 + f2 lines should update after ampl adjustments
 set(spec_axinfo.htitl,'String',sprintf('frame(%d), %.2fsec:',params{1}.iframe,t_spec));
 set(spec_ax,'UserData',spec_axinfo);
 [t_low,t_spec,t_hi] = get_ax_tmarker_times(spec_ax);
