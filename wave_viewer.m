@@ -136,7 +136,7 @@ panelFontSize = .1;
 % create panel for buttons
 buttonPanelXPos = panelPad;
 buttonPanelYPos = panelPad;
-buttonPanelXSpan = 0.1;
+buttonPanelXSpan = 0.2;
 buttonPanelYSpan = 1 - panelPad*2;
 buttonPanelPos = [buttonPanelXPos buttonPanelYPos buttonPanelXSpan buttonPanelYSpan];
 p.guidata.buttonPanel = uipanel(p.guidata.f,'Units','Normalized',...
