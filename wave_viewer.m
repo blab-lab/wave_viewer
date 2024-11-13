@@ -1336,10 +1336,23 @@ update_spec_plots(spec_axinfo.h,spec_axinfo.hply,axdat,params);
 % TODO f1 + f2 lines should update after ampl adjustments
 set(spec_axinfo.htitl,'String',sprintf('frame(%d), %.2fsec:',params{1}.iframe,t_spec));
 set(spec_ax,'UserData',spec_axinfo);
-[t_low,t_spec,t_hi] = get_ax_tmarker_times(spec_ax);
+[spec_ax, t_low,t_spec,t_hi, t_userevents] = get_ax_tmarker_times(spec_ax); % TIENE UNA PROBLEMA
 update_tmarker(spec_axinfo.h_tmarker_low, t_low);
 update_tmarker(spec_axinfo.h_tmarker_spec, t_spec);
 update_tmarker(spec_axinfo.h_tmarker_hi,  t_hi);
+
+% f1 = params{1}.f1;
+% f2 = params{1}.f2; 
+% 
+% if isfield(spec_axinfo, 'h_formant1') && ishandle(spec_axinfo.h_formant1)
+%     set(spec_axinfo.h_formant1, 'YData', [f1 f1]); 
+% end
+% if isfield(spec_axinfo, 'h_formant2') && ishandle(spec_axinfo.h_formant2)
+%     set(spec_axinfo.h_formant2, 'YData', [f2 f2]); % 
+% end
+
+
+
 set(spec_ax,'UserData',spec_axinfo);
 end
 
