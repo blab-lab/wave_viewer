@@ -982,7 +982,7 @@ else
     [axdat{1},params{1}] = make_ampl_axdat(y,fs);
 end
 
-% TODO figure out what's going on here
+% TODO lookat
 % create ampl ax in taxesPanel
 ampl_ax = axes(p.guidata.taxesPanel);
 axinfo = new_axinfo('ampl',params{1}.taxis,[],axdat,ampl_ax,[],wave_axinfo.name,params{1}.taxis(1),params{1}.taxis(end),params,wave_axinfo.p);
@@ -1016,8 +1016,6 @@ update_tmarker(ampl_axinfo.h_tmarker_low,[]);
 update_tmarker(ampl_axinfo.h_tmarker_spec,[]);
 update_tmarker(ampl_axinfo.h_tmarker_hi,[]);
 set(ampl_ax,'UserData',ampl_axinfo);
-% set(ampl_ax, 'LineStyle', '--'); FIXME: remove this but keep
-% adding/removing to try to identify where the problem is occurring
 end
 
 function [the_axdat,the_params] = make_ampl_axdat(y,fs)
@@ -1029,7 +1027,6 @@ the_params.fs = fs;
 the_params.taxis = ampl_taxis;
 end
 
-% updates ampl voicing line (avg/trial)
 function  hl_ampl_thresh4voicing = set_ampl_thresh4voicing_line(ampl_thresh4voicing,ampl_axinfo,old_hl_ampl_thresh4voicing)
 ylim = get(ampl_axinfo.h,'YLim');
 if ylim(1) <= ampl_thresh4voicing && ampl_thresh4voicing < ylim(2)
@@ -1333,26 +1330,13 @@ spec_axinfo.params = params;
 
 update_spec_plots(spec_axinfo.h,spec_axinfo.hply,axdat,params);
 
-% TODO f1 + f2 lines should update after ampl adjustments
+% TODO f1+f2 lines should change after ampl adjustments
 set(spec_axinfo.htitl,'String',sprintf('frame(%d), %.2fsec:',params{1}.iframe,t_spec));
 set(spec_ax,'UserData',spec_axinfo);
-[spec_ax, t_low,t_spec,t_hi, t_userevents] = get_ax_tmarker_times(spec_ax); % TIENE UNA PROBLEMA
+[t_low,t_spec,t_hi] = get_ax_tmarker_times(spec_ax);
 update_tmarker(spec_axinfo.h_tmarker_low, t_low);
 update_tmarker(spec_axinfo.h_tmarker_spec, t_spec);
 update_tmarker(spec_axinfo.h_tmarker_hi,  t_hi);
-
-% f1 = params{1}.f1;
-% f2 = params{1}.f2; 
-% 
-% if isfield(spec_axinfo, 'h_formant1') && ishandle(spec_axinfo.h_formant1)
-%     set(spec_axinfo.h_formant1, 'YData', [f1 f1]); 
-% end
-% if isfield(spec_axinfo, 'h_formant2') && ishandle(spec_axinfo.h_formant2)
-%     set(spec_axinfo.h_formant2, 'YData', [f2 f2]); % 
-% end
-
-
-
 set(spec_ax,'UserData',spec_axinfo);
 end
 
@@ -1508,7 +1492,8 @@ switch axinfo.type
     case 'spec'
         % first, do some dummy plotting to create the hlpy's
         hply(1) = plot(taxis,axdat{1});
-        hold on;
+        hold(hax, 'on');
+        plot(hax, axdat{1}, 'k');
 %         hply(2) = plot(taxis,axdat{2});
         formant = params{2}.formants;
         nformants = length(formant);
@@ -1516,8 +1501,9 @@ switch axinfo.type
             hply(iformant+2) = line(formant(iformant)*[1 1],[0 1]);
             h_formant_name = text(t_min,0,sprintf(' F%d',iformant));
             set(hply(iformant+2),'UserData',h_formant_name);
+            line(hax, formant(iformant) * [1 1], [0 1], 'Color', 'r'); % FIXME oopsie
         end
-        set_viewer_axlims(hax,t_min,t_max,[0 1],0);
+        set_viewer_axlims(hax,min(axdat{1}),max(axdat{1}),[0 1], 1);
         hold off
         
         % then do the real plotting
