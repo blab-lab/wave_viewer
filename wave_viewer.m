@@ -146,9 +146,9 @@ p.guidata.buttonPanel = uipanel(p.guidata.f,'Units','Normalized',...
     'BorderType','none');
 
 % create panel for frequency-based axes
-faxesPanelXPos = buttonPanelXPos + buttonPanelXSpan + panelPad*.75;
+faxesPanelXPos = buttonPanelXPos + buttonPanelXSpan; 
 faxesPanelYPos = panelPad*2; % extra pad on bottom
-faxesPanelXSpan = 1 - faxesPanelXPos - panelPad;
+faxesPanelXSpan = 0.8 - faxesPanelXPos - panelPad; %TODO reference for right panels
 faxesPanelYSpan = 0.2;
 faxesPanelPos = [faxesPanelXPos faxesPanelYPos faxesPanelXSpan faxesPanelYSpan];
 p.guidata.faxesPanel = uipanel(p.guidata.f,'Units','Normalized',...
@@ -212,15 +212,17 @@ horiz_orig = padYBig;
 
 buttonWidth = .9;
 buttonHeight = .05;
-buttonFontSize = .4;
+buttonFontSize = .45;
 sliderHeight = .025;
 dropdownHeight = .03;
 dropdownFontSize = .5;
 editHeight = .025;
-editFontSize = .6;
+editFontSize = 1;
 textHeight = buttonHeight;
 textFontSize = buttonFontSize;
+labelFontSize = textFontSize * 1.3;
 textPosYOffset = 0.0240;
+labelPosYOffset = 0.5;
 tinyHeight = textHeight*.75;
 tinyPosYOffset = textPosYOffset*.75;
 
@@ -377,7 +379,7 @@ editEventsButtonPos = [padL horiz_orig buttonWidth/2 buttonHeight];
 hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
     'String','<html><center>rename<br>events</center></html>',...
     'Units','Normalized','Position',editEventsButtonPos,...
-    'FontUnits','Normalized','FontSize',buttonFontSize*0.75,...
+    'FontUnits','Normalized','FontSize',buttonFontSize*0.86,...
     'Callback',@edit_events);
 % no change in horiz_orig, since "previous" button is in-line with "continue" button
     function edit_events(hObject,eventdata) % callback for h_button_edit_events
@@ -446,7 +448,7 @@ clearEventsButtonPos = [padL+buttonWidth*1/2 horiz_orig buttonWidth*1/2 buttonHe
 hbutton.clear_events = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
     'String','<html><center>clear<br>events</center></html>',...
     'Units','Normalized','Position',clearEventsButtonPos,...
-    'FontUnits','Normalized','FontSize',buttonFontSize*0.75,...
+    'FontUnits','Normalized','FontSize',buttonFontSize*0.86,...
     'Callback',@clear_events);
 horiz_orig = horiz_orig + buttonHeight + padYButton;
     function clear_events(hObject,eventdata) % callback for h_button_clear_events
@@ -597,14 +599,14 @@ hdropdown.ms_framespec_gram = uicontrol(p.guidata.buttonPanel,'Style','popupmenu
 horiz_orig = horiz_orig + dropdownHeight + padYSmall;
 
 % ms framespec: gram text
-horiz_orig = horiz_orig - tinyPosYOffset;
+horiz_orig = horiz_orig - tinyPosYOffset + 0.01;   
 msFramespecGramTextPos = [padL horiz_orig buttonWidth tinyHeight];
 htext.ms_framespec_gram = uicontrol(p.guidata.buttonPanel,'Style','text',...
     'String','framespec: gram',...
     'Units','Normalized','Position',msFramespecGramTextPos,...
-    'FontUnits','Normalized','FontSize',textFontSize);
+    'FontUnits','Normalized','FontSize',labelFontSize);
 uistack(htext.ms_framespec_gram,'bottom'); % move to bottom
-horiz_orig = horiz_orig + tinyHeight + padYSmall;
+horiz_orig = horiz_orig + tinyHeight + padYBig*0.5;
 last_sigproc_params.ms_framespec_gram = p.sigproc_params.ms_framespec_gram;
     function set_ms_framespec_gram(hObject,eventdata) % callback for hdropdown.ms_framespec_gram
         p.sigproc_params.ms_framespec_gram = all_ms_framespecs.name{get(hdropdown.ms_framespec_gram,'Value')};
@@ -627,14 +629,14 @@ hdropdown.ms_framespec_form = uicontrol(p.guidata.buttonPanel,'Style','popupmenu
 horiz_orig = horiz_orig + dropdownHeight + padYSmall;
 
 % ms framespec: formant text
-horiz_orig = horiz_orig - tinyPosYOffset;
+horiz_orig = horiz_orig - tinyPosYOffset + 0.01;
 msFramespecFormTextPos = [padL horiz_orig buttonWidth tinyHeight];
 htext.ms_framespec_form = uicontrol(p.guidata.buttonPanel,'Style','text',...
     'String','framespec: formants',...
     'Units','Normalized','Position',msFramespecFormTextPos,...
-    'FontUnits','Normalized','FontSize',textFontSize);
+    'FontUnits','Normalized','FontSize',labelFontSize);
 uistack(htext.ms_framespec_form,'bottom'); % move to bottom
-horiz_orig = horiz_orig + tinyHeight + padYBig;
+horiz_orig = horiz_orig + tinyHeight + padYBig*0.5;
 last_sigproc_params.ms_framespec_form = p.sigproc_params.ms_framespec_form;
     function set_ms_framespec_form(hObject,eventdata) % callback for hdropdown.ms_framespec_form
         p.sigproc_params.ms_framespec_form = all_ms_framespecs.name{get(hdropdown.ms_framespec_form,'Value')};
@@ -665,7 +667,7 @@ htext.nlpc     = uicontrol(p.guidata.buttonPanel,'Style','text',...
     'Units','Normalized','Position',nlpcTextPos,...
     'FontUnits','Normalized','FontSize',textFontSize);
 uistack(htext.nlpc,'bottom'); % move to bottom
-horiz_orig = horiz_orig + textHeight + padYBig;
+horiz_orig = horiz_orig + textHeight + padYBig*0.5;
 last_sigproc_params.nlpc = p.sigproc_params.nlpc;
     function set_nlpc_choice(hObject,eventdata) % callback for hdropdown.nlpc
         p.sigproc_params.nlpc = p.sigproc_params.nlpc_choices(get(hdropdown.nlpc,'Value'));
@@ -689,7 +691,7 @@ p.guidata.text_ampl_thresh4voicing = uicontrol(p.guidata.buttonPanel,'Style','te
     'Units','Normalized','Position',amplThreshTextPos,...
     'FontUnits','Normalized','FontSize',textFontSize);
 uistack(p.guidata.text_ampl_thresh4voicing,'bottom'); % move to bottom
-horiz_orig = horiz_orig + textHeight + padYBig;
+horiz_orig = horiz_orig + textHeight + padYBig*.5;
     function set_edit_ampl_thresh4voicing(hObject,eventdata) % callback for hedit.ampl_thresh4voicing
         set_ampl_thresh4voicing(str2double(get(hedit.ampl_thresh4voicing,'String')));
     end
@@ -711,7 +713,7 @@ hbutton.toggle_formant = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',..
     'Units','Normalized','Position',calcButtonPos,...
     'FontUnits','Normalized','FontSize',buttonFontSize,...
     'Callback',@toggle_formants);
-horiz_orig = horiz_orig + buttonHeight + padYButton;
+horiz_orig = horiz_orig + buttonHeight + padYButton*0.8;
     function toggle_formants(hObject,eventdata) % callback for hbutton.toggle_formant
         axinfo = get(gram_ax,'UserData');
         locF1 = find(gram_ax.Children == axinfo.hply(2));
@@ -736,7 +738,7 @@ hbutton.calc = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
     'Units','Normalized','Position',calcButtonPos,...
     'FontUnits','Normalized','FontSize',buttonFontSize,...
     'Callback',@calcFx);
-horiz_orig = horiz_orig + buttonHeight + padYButton;
+horiz_orig = horiz_orig + buttonHeight + padYButton*0.25;
 normal_bgcolor = get(hbutton.calc,'BackgroundColor');
     function calcFx(hObject,eventdata) % callback for hbutton.calc
         update_ampl_ax(  ampl_ax,wave_ax,        p);
