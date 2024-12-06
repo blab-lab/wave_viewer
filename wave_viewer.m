@@ -148,7 +148,7 @@ p.guidata.buttonPanel = uipanel(p.guidata.f,'Units','Normalized',...
 % create panel for frequency-based axes
 faxesPanelXPos = buttonPanelXPos + buttonPanelXSpan; 
 faxesPanelYPos = panelPad*2; % extra pad on bottom
-faxesPanelXSpan = 1 - faxesPanelXPos - panelPad; %TODO reference for right panels
+faxesPanelXSpan = 1 - faxesPanelXPos - panelPad; % reference for right panels
 faxesPanelYSpan = 0.2;
 faxesPanelPos = [faxesPanelXPos faxesPanelYPos faxesPanelXSpan faxesPanelYSpan];
 p.guidata.faxesPanel = uipanel(p.guidata.f,'Units','Normalized',...
@@ -652,7 +652,7 @@ for ichoice = 1:nchoices
 end
 initial_dropdown_value = find(p.sigproc_params.nlpc_choices == p.sigproc_params.nlpc);
 if isempty(initial_dropdown_value), initial_dropdown_value = 1; end
-nlpcDropdownPos = [padL horiz_orig buttonWidth dropdownHeight];
+nlpcDropdownPos = [padL horiz_orig+0.01 buttonWidth dropdownHeight];
 hdropdown.nlpc = uicontrol(p.guidata.buttonPanel,'Style','popupmenu',...
     'String',nlpc_choice_strs,...
     'Value',initial_dropdown_value, ...
@@ -663,7 +663,7 @@ horiz_orig = horiz_orig + dropdownHeight + padYSmall;
 
 % nlpc text
 horiz_orig = horiz_orig - textPosYOffset;
-nlpcTextPos = [padL horiz_orig buttonWidth textHeight];
+nlpcTextPos = [padL horiz_orig+0.01 buttonWidth textHeight];
 htext.nlpc     = uicontrol(p.guidata.buttonPanel,'Style','text',...
     'String','LPC order',...
     'Units','Normalized','Position',nlpcTextPos,...
@@ -677,7 +677,7 @@ last_sigproc_params.nlpc = p.sigproc_params.nlpc;
     end
 
 % amplitude threshold edit
-amplThreshEditPos = [padL horiz_orig buttonWidth editHeight];
+amplThreshEditPos = [padL horiz_orig+0.02 buttonWidth editHeight];
 hedit.ampl_thresh4voicing = uicontrol(p.guidata.buttonPanel,'Style','edit',...
     'String',p.sigproc_params.ampl_thresh4voicing, ...
     'Units','Normalized','Position',amplThreshEditPos,...
@@ -687,11 +687,11 @@ horiz_orig = horiz_orig + editHeight + padYSmall;
 
 % amplitude threshold text
 horiz_orig = horiz_orig - textPosYOffset;
-amplThreshTextPos = [padL horiz_orig buttonWidth textHeight];
+amplThreshTextPos = [padL horiz_orig+0.02 buttonWidth textHeight];
 p.guidata.text_ampl_thresh4voicing = uicontrol(p.guidata.buttonPanel,'Style','text',...
     'String','ampl threshold',...
     'Units','Normalized','Position',amplThreshTextPos,...
-    'FontUnits','Normalized','FontSize',textFontSize*0.9);
+    'FontUnits','Normalized','FontSize',textFontSize);
 uistack(p.guidata.text_ampl_thresh4voicing,'bottom'); % move to bottom
 horiz_orig = horiz_orig + textHeight + padYBig*.5;
     function set_edit_ampl_thresh4voicing(hObject,eventdata) % callback for hedit.ampl_thresh4voicing
@@ -709,7 +709,7 @@ last_sigproc_params.ampl_thresh4voicing = p.sigproc_params.ampl_thresh4voicing;
     end
 
 % show/hide formant button
-calcButtonPos = [padL horiz_orig buttonWidth buttonHeight];
+calcButtonPos = [padL horiz_orig+0.03 buttonWidth buttonHeight];
 hbutton.toggle_formant = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
     'String','toggle formants',...
     'Units','Normalized','Position',calcButtonPos,...
@@ -734,13 +734,13 @@ horiz_orig = horiz_orig + buttonHeight + padYButton*0.8;
         set(gram_ax,'UserData',axinfo);
     end
 % calc button
-calcButtonPos = [padL horiz_orig buttonWidth buttonHeight];
+calcButtonPos = [padL horiz_orig+0.03 buttonWidth buttonHeight];
 hbutton.calc = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
     'String','calc',...
     'Units','Normalized','Position',calcButtonPos,...
     'FontUnits','Normalized','FontSize',buttonFontSize,...
     'Callback',@calcFx);
-horiz_orig = horiz_orig + buttonHeight + padYButton*0.25;
+horiz_orig = horiz_orig + buttonHeight + padYButton;
 normal_bgcolor = get(hbutton.calc,'BackgroundColor');
     function calcFx(hObject,eventdata) % callback for hbutton.calc
         update_ampl_ax(  ampl_ax,wave_ax,        p);
