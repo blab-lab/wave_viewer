@@ -148,7 +148,7 @@ p.guidata.buttonPanel = uipanel(p.guidata.f,'Units','Normalized',...
 % create panel for frequency-based axes
 faxesPanelXPos = buttonPanelXPos + buttonPanelXSpan; 
 faxesPanelYPos = panelPad*2; % extra pad on bottom
-faxesPanelXSpan = 1 - faxesPanelXPos - panelPad; %TODO reference for right panels
+faxesPanelXSpan = 1 - faxesPanelXPos - panelPad; % reference for right panels
 faxesPanelYSpan = 0.2;
 faxesPanelPos = [faxesPanelXPos faxesPanelYPos faxesPanelXSpan faxesPanelYSpan];
 p.guidata.faxesPanel = uipanel(p.guidata.f,'Units','Normalized',...
@@ -652,7 +652,7 @@ for ichoice = 1:nchoices
 end
 initial_dropdown_value = find(p.sigproc_params.nlpc_choices == p.sigproc_params.nlpc);
 if isempty(initial_dropdown_value), initial_dropdown_value = 1; end
-nlpcDropdownPos = [padL horiz_orig buttonWidth dropdownHeight];
+nlpcDropdownPos = [padL horiz_orig+0.01 buttonWidth dropdownHeight];
 hdropdown.nlpc = uicontrol(p.guidata.buttonPanel,'Style','popupmenu',...
     'String',nlpc_choice_strs,...
     'Value',initial_dropdown_value, ...
@@ -663,7 +663,7 @@ horiz_orig = horiz_orig + dropdownHeight + padYSmall;
 
 % nlpc text
 horiz_orig = horiz_orig - textPosYOffset;
-nlpcTextPos = [padL horiz_orig buttonWidth textHeight];
+nlpcTextPos = [padL horiz_orig+0.01 buttonWidth textHeight];
 htext.nlpc     = uicontrol(p.guidata.buttonPanel,'Style','text',...
     'String','LPC order',...
     'Units','Normalized','Position',nlpcTextPos,...
@@ -677,7 +677,7 @@ last_sigproc_params.nlpc = p.sigproc_params.nlpc;
     end
 
 % amplitude threshold edit
-amplThreshEditPos = [padL horiz_orig buttonWidth editHeight];
+amplThreshEditPos = [padL horiz_orig+0.02 buttonWidth editHeight];
 hedit.ampl_thresh4voicing = uicontrol(p.guidata.buttonPanel,'Style','edit',...
     'String',p.sigproc_params.ampl_thresh4voicing, ...
     'Units','Normalized','Position',amplThreshEditPos,...
@@ -687,11 +687,11 @@ horiz_orig = horiz_orig + editHeight + padYSmall;
 
 % amplitude threshold text
 horiz_orig = horiz_orig - textPosYOffset;
-amplThreshTextPos = [padL horiz_orig buttonWidth textHeight];
+amplThreshTextPos = [padL horiz_orig+0.02 buttonWidth textHeight];
 p.guidata.text_ampl_thresh4voicing = uicontrol(p.guidata.buttonPanel,'Style','text',...
     'String','ampl threshold',...
     'Units','Normalized','Position',amplThreshTextPos,...
-    'FontUnits','Normalized','FontSize',textFontSize*0.9);
+    'FontUnits','Normalized','FontSize',textFontSize);
 uistack(p.guidata.text_ampl_thresh4voicing,'bottom'); % move to bottom
 horiz_orig = horiz_orig + textHeight + padYBig*.5;
     function set_edit_ampl_thresh4voicing(hObject,eventdata) % callback for hedit.ampl_thresh4voicing
@@ -709,7 +709,7 @@ last_sigproc_params.ampl_thresh4voicing = p.sigproc_params.ampl_thresh4voicing;
     end
 
 % show/hide formant button
-calcButtonPos = [padL horiz_orig buttonWidth buttonHeight];
+calcButtonPos = [padL horiz_orig+0.03 buttonWidth buttonHeight];
 hbutton.toggle_formant = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
     'String','toggle formants',...
     'Units','Normalized','Position',calcButtonPos,...
@@ -734,13 +734,13 @@ horiz_orig = horiz_orig + buttonHeight + padYButton*0.8;
         set(gram_ax,'UserData',axinfo);
     end
 % calc button
-calcButtonPos = [padL horiz_orig buttonWidth buttonHeight];
+calcButtonPos = [padL horiz_orig+0.03 buttonWidth buttonHeight];
 hbutton.calc = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
     'String','calc',...
     'Units','Normalized','Position',calcButtonPos,...
     'FontUnits','Normalized','FontSize',buttonFontSize,...
     'Callback',@calcFx);
-horiz_orig = horiz_orig + buttonHeight + padYButton*0.25;
+horiz_orig = horiz_orig + buttonHeight + padYButton;
 normal_bgcolor = get(hbutton.calc,'BackgroundColor');
     function calcFx(hObject,eventdata) % callback for hbutton.calc
         update_ampl_ax(  ampl_ax,wave_ax,        p);
@@ -1411,10 +1411,20 @@ axinfo.i = 0;
 axinfo.type = axtype;
 axinfo.name = name;
 axinfo.dat = axdat;
-axinfo.datlims = size(axdat{1});
+axinfo.datlims = size(axdat{1}); 
 axinfo.params = params;
 axinfo.taxis = taxis;
 axinfo.faxis = faxis;
+
+% FIXME: notes (12/6/24)
+% changing dat lims or buffer does not appear to have any noticeable impact
+% try: printing values for axinfo/axdat{some index} to see if they're being
+% calculated correctly. 
+% set_viewer_axlims appears to be correct but double-check. 
+% expand_btw_ax_tmarkers also does not seem to be the source of this error,
+% upon further investigation. verify if this is true
+% current hypothesis is that the program does not know how to calculate
+% limits for small sample sizes (for waveform, it works fine)
 
 switch axinfo.type
     case 'wave'
@@ -2067,7 +2077,7 @@ fprintf('t_low(%.3f sec), t_hi(%.3f sec), dur(%.3f sec, %d samples)\n', ...
     t_tmarker_low,t_tmarker_hi,t_tmarker_hi-t_tmarker_low,ihi-ilow+1);
 end
 
-function expand_btw_ax_tmarkers(ax,tAx,fAx)
+function expand_btw_ax_tmarkers(ax,tAx,fAx) 
 fig_params = get_fig_params;
 axinfo = get(ax,'UserData');
 [t_tmarker_low,t_tmarker_spec,t_tmarker_hi] = get_ax_tmarker_times(ax);
@@ -2101,7 +2111,7 @@ if length(t_user_events) >= 2
     t_low = min(t_user_events) - tmarker_buffer; 
     t_hi = max(t_user_events) + tmarker_buffer; 
 elseif length(t_user_events) == 1
-    tmarker_buffer = 0.2;
+    tmarker_buffer = 0.05;
     t_low = t_user_events(1) - tmarker_buffer;
     t_hi = t_user_events(1) + tmarker_buffer;
 else
@@ -2130,8 +2140,8 @@ for i = 1:length(tAx) %find the axis with the most restrictive start and end tim
         tAx_earliest_end_time = tAx(i).UserData.taxis(end);
     end
 end
-t_low_ax_min = tAx_latest_start_time + fig_params.tmarker_init_border*tmarker_buffer*2; %set floor and ceiling so all axes are aligned
-t_hi_ax_max = tAx_earliest_end_time - fig_params.tmarker_init_border*tmarker_buffer*2;
+t_low_ax_min = floor(tAx_latest_start_time + fig_params.tmarker_init_border*tmarker_buffer*2); %set floor and ceiling so all axes are aligned
+t_hi_ax_max = ceil(tAx_earliest_end_time - fig_params.tmarker_init_border*tmarker_buffer*2);
 if t_low <= t_low_ax_min %conform to floor and ceiling if necessary
     t_low = t_low_ax_min;
 end
