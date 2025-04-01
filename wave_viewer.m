@@ -2089,21 +2089,23 @@ end
 end
 
 function expand_btw_ax_uev(ax,tAx,fAx) 
+axinfo = get(ax,'UserData');
+trialdur = axinfo.t_hlim;
 [~,t_spec,~,t_user_events] = get_ax_tmarker_times(ax);
 sorted_t_user_events = sort(t_user_events); 
-trialdur = tAx(1).XLim(2); 
+num_user_events = length(t_user_events);
 
 fig_params = get_fig_params;
-if length(t_user_events) >= 2
+if num_user_events >= 2
     tmarker_buffer = 0.05;
     [t_low, lowix] = min(sorted_t_user_events); 
-    if t_low == 0
+    if t_low==0 && num_user_events>2
         t_low = sorted_t_user_events(lowix+1); 
     end
     t_low = t_low - tmarker_buffer; 
 
     [t_hi, hix] = max(sorted_t_user_events); 
-    if t_hi == trialdur
+    if abs(t_hi-trialdur)<0.004 && num_user_events > 2
         t_hi = sorted_t_user_events(hix-1); 
     end
     t_hi = t_hi + tmarker_buffer; 
