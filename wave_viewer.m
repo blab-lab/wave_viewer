@@ -2096,9 +2096,17 @@ sorted_t_user_events = sort(t_user_events);
 num_user_events = length(t_user_events);
 
 fig_params = get_fig_params;
+
+% if 2 or more UEVs, zoom to include all events plus small buffer.
+% If 1 UEV, zoom to include event plus bigger buffer on each side.
+% If no UEVs, zoom to include all tracked formants plus small buffer.
 if num_user_events >= 2
     tmarker_buffer = 0.05;
     [t_low, lowix] = min(sorted_t_user_events); 
+    
+    % if the lowest user event is near zero, or highest user event is near
+    % the end of the trial, quickzoom to non-endpoint UEVs if they exist.
+    % This comes up most often with UEVs populated by a forced aligner.
     if t_low==0 && num_user_events>2
         t_low = sorted_t_user_events(lowix+1); 
     end
