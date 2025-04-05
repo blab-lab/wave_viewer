@@ -19,6 +19,7 @@ switch ftrack_method
     case 'mine',  ftrack_func = @my_ftrack_func;    params.nformants_max = 3; params.yes_trackperframe = 1;
     case 'mine2', ftrack_func = @my_ftrack_func2;   params.nformants_max = 4; params.yes_trackperframe = 1;
     case 'praat', ftrack_func = @praat_ftrack_func; params.nformants_max = 5; params.yes_trackperframe = 0;
+    case 'fasttrack', ftrack_func = @fasttrack_ftrack_func; params.nformants_max = 5; params.yes_trackperframe = 0;
     otherwise, error('formant tracking method(%s) unrecognized',ftrack_method);
 end
 if ~nformants, nformants = params.nformants_max; end
@@ -201,6 +202,73 @@ output{1} = formant;
 output{2} = lpc_coeffs;
 output{3} = msaxis * 1000; %covert from s to ms
 
+%%% function which executes Fast Track script using params
+function output = fasttrack_ftrack_func(y,params)
+    %must be in git repo folder to run praat function, so save current location and go there
+    curr_dir = pwd;
+    temp_str = which('get_fast_tracks.praat');
+    praat_path = fileparts(temp_str);
+    cd(praat_path)
+    
+    fs = params.fs;
+    nformants = params.nformants;
+
+    %%% Praat wrapper code here
+    % write y to file (this will be deleted later, it is just written to the
+    % current directory)
+    audiowrite('temp_wav.wav',y,fs)
+    
+    if ismac
+        status = system(['"/Applications/Praat.app/Contents/MacOS/Praat" --run get_fast_tracks.praat "' pwd '" "temp_wav"']);
+    else
+        status = system(['"C:\Users\Public\Desktop\Praat.exe" --run get_fast_tracks.praat "' pwd '" "temp_wav"']);
+    end
+    if status ~= 0
+        error('Something went wrong in Praat analysis')
+    end
+    
+    % clean up praat output text file to eliminate uninterpretable characters
+    A = regexp( fileread('temp_wav_formants.txt'), '\n', 'split');
+    headers = strsplit(A{1},'\t');
+    if length(headers) == 1 % for some reason Praat sometimes uses a space to separate headers
+        headers = strsplit(A{1},' ');
+    end
+    for i = 1:length(headers)
+        curTxt = headers{i};
+        startUnits = strfind(curTxt,'(');
+        if ~isempty(startUnits)
+            curTxt = curTxt(1:startUnits-1);
+            headers{i} = curTxt;
+        end
+    end
+    A{1} = strjoin(headers,'\t');
+    fid = fopen('temp_wav_formants.txt','w');
+    fprintf(fid, '%s\n', A{:});
+    fclose(fid);
+    
+    % load formant tracks from file written by Praat and put in 'formant' output
+    formant_vals = readtable('temp_wav_formants.txt','Delimiter','\t');
+    
+    %find number of formant values returned by praat
+    for nf = 1:nformants
+        form=['F' num2str(nf)]; % finds the particular formant number
+        formant(nf,:) = formant_vals.(form)'; % updates row in formant
+    end
+    
+    %find times of formants
+    msaxis = formant_vals.time';
+    
+    % clean up by deleting files and return to previous directory
+    delete temp_wav.wav 
+    delete temp_wav_formants.txt
+    cd(curr_dir)
+    
+    % establish outputs
+    lpc_coeffs = [];
+    output{1} = formant;
+    output{2} = lpc_coeffs;
+    output{3} = msaxis * 1000; %covert from s to ms
+%%% end of Fast Track function
 
 % my version of the colea frmnts function,
 % orinally copyright (c) 1998 by Philipos C. Loizou
