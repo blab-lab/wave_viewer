@@ -201,6 +201,18 @@ redistrib_ax(fAx,nfAx);                 %
 spec_ax.Position(2) = spec_ax_ypos;     %
 spec_ax.Position(4) = spec_ax_height;   %
 
+% In MATLAB 2025a, they switched from OpenGL to WebGL for graphics
+% rendering. This impacts how text and other interface elements are
+% rendered. As a simple initial solution, this boolean allows different
+% settings for each graphics renderer
+graphics_renderer_info = rendererinfo(spec_ax);
+if strcmp(graphics_renderer_info.GraphicsRenderer, 'OpenGL Hardware')
+    bNewGraphicsRenderer = 0;
+else
+    bNewGraphicsRenderer = 1;
+end
+
+
 %% buttons
 
 padL = .05;
@@ -350,7 +362,7 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
 
 % previous button
 prevButtonPos = [padL horiz_orig buttonWidth/3 buttonHeight];
-hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
+hbutton.prev = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
     'String','previous',...
     'Units','Normalized','Position',prevButtonPos,...
     'FontUnits','Normalized','FontSize',buttonFontSize*2/3,...
@@ -393,8 +405,13 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
 %%
 % edit events button
 editEventsButtonPos = [padL horiz_orig buttonWidth/2 buttonHeight];
-hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
-    'String','<html><center>rename<br>events</center></html>',...
+if bNewGraphicsRenderer
+    editEventsString = {'rename'; 'events'};
+else
+    editEventsString = '<html><center>rename<br>events</center></html>';
+end
+hbutton.edit_events = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
+    'String',editEventsString,...
     'Units','Normalized','Position',editEventsButtonPos,...
     'FontUnits','Normalized','FontSize',buttonFontSize*0.75,...
     'Callback',@edit_events);
@@ -462,8 +479,13 @@ hbutton.cont = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
 
 % clear events button
 clearEventsButtonPos = [padL+buttonWidth*1/2 horiz_orig buttonWidth*1/2 buttonHeight];
+if bNewGraphicsRenderer
+    clearEventsString = {'clear'; 'events'};
+else
+    clearEventsString = '<html><center>clear<br>events</center></html>';
+end
 hbutton.clear_events = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
-    'String','<html><center>clear<br>events</center></html>',...
+    'String',clearEventsString,...
     'Units','Normalized','Position',clearEventsButtonPos,...
     'FontUnits','Normalized','FontSize',buttonFontSize*0.75,...
     'Callback',@clear_events);
