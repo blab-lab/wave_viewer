@@ -1076,19 +1076,19 @@ else
 end
 if isempty(old_hl_ampl_thresh4voicing)
     if yes_inrange2plot
-        hl_ampl_thresh4voicing = hline(ampl_thresh4voicing,'r');
+        hl_ampl_thresh4voicing = yline(ampl_thresh4voicing,'Color','red');
         set(hl_ampl_thresh4voicing,'Visible','on');
     else
-        hl_ampl_thresh4voicing = hline(mean(ylim),'r');
+        hl_ampl_thresh4voicing = yline(mean(ylim),'Color','red');
         set(hl_ampl_thresh4voicing,'Visible','off');
     end
 else
     hl_ampl_thresh4voicing = old_hl_ampl_thresh4voicing;
     if yes_inrange2plot
-        set(hl_ampl_thresh4voicing,'YData',ampl_thresh4voicing*[1 1]);
+        set(hl_ampl_thresh4voicing,'Value',ampl_thresh4voicing);
         set(hl_ampl_thresh4voicing,'Visible','on');
     else
-        set(hl_ampl_thresh4voicing,'YData',mean(ylim)*[1 1]);
+        set(hl_ampl_thresh4voicing,'Value',mean(ylim));
         set(hl_ampl_thresh4voicing,'Visible','off');
     end
 end
