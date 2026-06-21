@@ -7,13 +7,13 @@
 #Inputs
 form Measure formant values for segments in a textgrid
     sentence directory_name: /Users/Ben/Documents/MATLAB/wave_viewer
-	sentence file_name: temp_wav
+    sentence file_name: temp_wav
     positive maximum_formant 5500
     positive number_of_formants 5
-	positive window_size 0.025
+    positive window_size 0.025
     positive time_step 0.005
-	positive preemphasis 50
-	positive fs 11025
+    positive preemphasis 50
+    positive fs 11025
 endform
 
 #open the sound and select it

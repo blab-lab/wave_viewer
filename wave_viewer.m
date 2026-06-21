@@ -123,7 +123,7 @@ fprintf('yes_start_blocking(%d)\n',yes_start_blocking);
 %% set up GUI
 
 % create new figure
-hf = figure('Name',p.plot_params.name,'Units','normalized','Position',p.plot_params.figpos);
+hf = figure('Name',p.plot_params.name,'Units','normalized','Position',p.plot_params.figpos); 
 set(hf,'DeleteFcn',@delete_func);
 
 p.guidata = guihandles(hf);
@@ -473,10 +473,6 @@ hbutton.edit_events = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
         end
     end
 
-
-
-
-
 % clear events button
 clearEventsButtonPos = [padL+buttonWidth*1/2 horiz_orig buttonWidth*1/2 buttonHeight];
 if bNewGraphicsRenderer
@@ -770,6 +766,7 @@ horiz_orig = horiz_orig + buttonHeight + padYButton;
         end
         set(gram_ax,'UserData',axinfo);
     end
+
 % calc button
 calcButtonPos = [padL horiz_orig buttonWidth buttonHeight];
 hbutton.calc = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
@@ -2431,7 +2428,6 @@ sigproc_params = struct('fs', 11025, ...
     'ptrack_octave_cost', 0.01, ...
     'ptrack_octave_jump_cost', 0.35, ...
     'ptrack_voiced_unvoiced_cost', 0.14);
-
 end
 
 %% get figure params (used to be global vars)
