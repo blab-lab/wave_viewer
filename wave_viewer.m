@@ -259,12 +259,14 @@ hbutton.help = uicontrol(p.guidata.buttonPanel,'Style','pushbutton',...
             ' \n', ...
             'C - continue to next trial\n', ...
             'F - formant toggle on/off\n', ...
-            'E - expand\n', ...
+            'E - expand (zoom in)\n', ...
             'Q - quick-expand between first and last user events. If no UEVs, expands to show formants\n', ...
-            'W - widen\n', ...
+            'Z - quick-expand to 200 ms around current position of yellow cursor.\n', ...
+            'W - widen (zoom out)\n', ...
             'A - add a user event\n', ...
             'D - delete a user event\n', ...
             'V - if ampl_ax, set amplitude threshold for voicing (i.e., valid formants)\n', ...
+            'T - enhances contrast of spectrogram\n',...
             'Right arrow - advance tmarker_spec by one frame\n', ...
             'Left arrow- retreat tmarker_spec by one frame\n', ...
             'H - heighten\n', ...
@@ -837,6 +839,8 @@ marker_captured = 0;
                     contprogram([],[]);
                 case 't'
                     my_colormap('my_gray',1,p.plot_params.thresh_gray,p.plot_params.max_gray);
+                case 'z' % zoom into your cursor (in case you have a lot of events) 
+                    expand_to_tmarkerspec(the_ax,tAx,fAx); 
                 otherwise
                     fprintf('len(%d)\n',length(event.Key));
                     fprintf('%d,',event.Key);
@@ -2222,6 +2226,64 @@ expand_btw_ax_tmarkers(ax,tAx,fAx)
 
 end
 
+
+function expand_to_tmarkerspec(ax,tAx,fAx) 
+% RK 8/2026: this is to zoom to where your cursor is. This is helpful if you have a lot of user events and want to check on one. 
+% Especially when the trial is long, which makes it difficult to grab green/red and move them around. 
+% This is more or less a copy of expand_btw_uevs (or whatever the name is) but just hard setting the interval. 
+    % axinfo = get(ax,'UserData');
+    % trialdur = axinfo.t_hlim;
+    [~,t_spec,~,t_user_events] = get_ax_tmarker_times(ax);
+    
+    fig_params = get_fig_params;
+
+    tmarker_buffer = 0.1; % say 100 ms on either side. 
+    t_low = t_spec - tmarker_buffer; 
+    t_hi = t_spec + tmarker_buffer; 
+    
+        %CWN 4/2020 -- The alignment checking in the next 19 lines could be
+        %modularized and called whenever the time markers move. For now, just
+        %calling it locally in the expand_btw_ax_uev function. RK 8/2026: and now to expand_to_tmarkerspec
+    %finds proper axis boundaries and tmarker times
+    tAx_latest_start_time = intmin;
+    tAx_earliest_end_time = intmax;
+    for i = 1:length(tAx) %find the axis with the most restrictive start and end times
+        if tAx(i).UserData.taxis(1) > tAx_latest_start_time
+            tAx_latest_start_time = tAx(i).UserData.taxis(1);
+        end
+        if tAx(i).UserData.taxis(end) < tAx_earliest_end_time
+            tAx_earliest_end_time = tAx(i).UserData.taxis(end);
+        end
+    end
+    t_low_ax_min = tAx_latest_start_time + fig_params.tmarker_init_border*tmarker_buffer*2; %set floor and ceiling so all axes are aligned
+    t_hi_ax_max = tAx_earliest_end_time - fig_params.tmarker_init_border*tmarker_buffer*2;
+    if t_low <= t_low_ax_min %conform to floor and ceiling if necessary
+        t_low = t_low_ax_min;
+    end
+    if t_hi >= t_hi_ax_max
+        t_hi = t_hi_ax_max;
+    end
+    if t_low > t_hi
+        warning('First user event must precede last user event.')
+        return
+    end
+    
+    %update axes with new tmarker times
+    if any(ax == tAx)
+        for i = 1:length(tAx)
+            update_ax_tmarkers(tAx(i),t_low,t_spec,t_hi,t_user_events);
+        end
+    else
+        for i = 1:length(fAx)
+            update_ax_tmarkers(fAx(i),t_low,t_spec,t_hi,t_user_events);
+        end
+    end
+    
+    %adjust the axes' boundaries
+    expand_btw_ax_tmarkers(ax,tAx,fAx)
+
+end
+
 function widen_ax_view(ax,tAx,fAx)
 axinfo = get(ax,'UserData');
 cur_tlims = get(axinfo.h,'XLim');
@@ -2231,13 +2293,29 @@ cur_trange = cur_thi - cur_tlow;
 new_t_low = cur_tlow - 0.5*cur_trange;
 new_t_hi = cur_thi + 0.5*cur_trange;
 
+% Rk add: moves the thi and tlow lines to match with the new, zoomed out window 
+new_trange = new_t_hi - new_t_low; 
+new_t_spec = new_t_low + 0.5*new_trange; 
+fig_params = get_fig_params; 
+tmarker_buffer = fig_params.tmarker_init_border; % I think this is the buffer where green/red are not on the literal edge
+
+new_tmarker_low = new_t_low + tmarker_buffer; 
+if new_tmarker_low < tmarker_buffer, new_tmarker_low = tmarker_buffer; end % This makes sure it doesn't go negative
+new_tmarker_hi = new_t_hi - tmarker_buffer; 
+if new_tmarker_hi > axinfo.t_hlim - tmarker_buffer, new_tmarker_hi = axinfo.t_hlim - tmarker_buffer; end
+% I think t_hlim is the time limit, which stays constant regardless of what you're doing with the axis. 
+
+[~,~,~,t_user_events] = get_ax_tmarker_times(ax);
+
 if any(ax == tAx)
     for i = 1:length(tAx)
         new_ax_tlims(tAx(i),new_t_low,new_t_hi);
+        update_ax_tmarkers(tAx(i),new_tmarker_low,new_t_spec,new_tmarker_hi,t_user_events); %RK add: moves red/green lines as well 
     end
 else
      for i = 1:length(fAx)
         new_ax_tlims(fAx(i),new_t_low,new_t_hi);
+        update_ax_tmarkers(fAx(i),new_tmarker_low,new_t_spec,new_tmarker_hi,t_user_events);  % RK add
      end
 end
 end
