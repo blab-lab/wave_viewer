@@ -841,6 +841,8 @@ marker_captured = 0;
                     my_colormap('my_gray',1,p.plot_params.thresh_gray,p.plot_params.max_gray);
                 case 'z' % zoom into your cursor (in case you have a lot of events) 
                     expand_to_tmarkerspec(the_ax,tAx,fAx); 
+                case 'b'
+                    display_timeDiff(the_ax); 
                 otherwise
                     fprintf('len(%d)\n',length(event.Key));
                     fprintf('%d,',event.Key);
@@ -2237,7 +2239,7 @@ function expand_to_tmarkerspec(ax,tAx,fAx)
     
     fig_params = get_fig_params;
 
-    tmarker_buffer = 0.1; % say 100 ms on either side. 
+    tmarker_buffer = 0.25; % say 250 ms on either side. 
     t_low = t_spec - tmarker_buffer; 
     t_hi = t_spec + tmarker_buffer; 
     
@@ -2281,6 +2283,24 @@ function expand_to_tmarkerspec(ax,tAx,fAx)
     
     %adjust the axes' boundaries
     expand_btw_ax_tmarkers(ax,tAx,fAx)
+
+end
+
+function display_timeDiff(ax)
+    [~,t_spec,~,t_user_events] = get_ax_tmarker_times(ax);
+    if ~isempty(t_user_events)
+        eventDistances = [t_user_events] - t_spec; 
+        absEventDistances = abs(eventDistances); 
+
+        % get the minimum 
+        closestTimeIx = find(absEventDistances == min(absEventDistances)); 
+        closestTimeLag = eventDistances(closestTimeIx); 
+        closestTimeLagMs = round(closestTimeLag * 1000); 
+        msgbox(sprintf('Distance from selection marker to nearest event is: \n\n%d ms', closestTimeLagMs))
+    end
+
+
+
 
 end
 
